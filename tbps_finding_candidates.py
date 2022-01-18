@@ -20,9 +20,15 @@ plt.xlabel('B0_MM/MeV')
 plt.ylabel('Number of candiates')
 plt.title('Rough examination(no filtering applied')
 
+#%%filtering order- strongest to weakest restriction (peel off layer by layer)
+
 #%% Invariant mass filtering 
 BL= #B0_lower_bound~B0 rest mass
 BU= #B0_upper_bound
-Bfilter= td[(td.B0_MM <BU)&(td.B0_MM>BL)] #filters out unwanted data
+Bfilter= td[(td.B0_MM <=BU)&(td.B0_MM>=BL)] #filters out unwanted data
+Bremoved=td[(td.B0_MM >=BU)&(td.B0_MM<=BL)] #these are the removed data for background analysis
 
-#%%Others: PT of products should be large, B 
+#%%
+#Other dicussed criterions: PT of products should be large; B0_IPCHI2_OWNPV shouldn't be too big; B0_DIRA~1; all X^2 can't really be too large for the data to make sense; 
+#identifying background contributions 
+
