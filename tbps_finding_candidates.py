@@ -17,7 +17,7 @@ path = r"pathname"
 files = glob.glob(path + "/*.csv")
   
 # assign dataset names
-list_of_names = ['acceptance_mc','jpsi']
+list_of_names = ['acceptance_mc','jpsi'] #names should be in the order as that in the file
  
 # create empty list
 dataframes_list = []
