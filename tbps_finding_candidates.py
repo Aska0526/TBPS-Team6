@@ -10,8 +10,28 @@ import matplotlib.pyplot as plt
 import numpy as np
 from iminuit import Minuit
 #%%opening up the file 
-os.chdir('your local file location')
-td=pd.read_csv('total_dataset.csv')
+# specifying the path to csv files
+path = r"pathname"
+  
+# csv files in the path
+files = glob.glob(path + "/*.csv")
+  
+# assign dataset names
+list_of_names = ['acceptance_mc','jpsi']
+ 
+# create empty list
+dataframes_list = []
+ 
+# append datasets into teh list
+for i in range(len(list_of_names)):
+    temp_df = pd.read_csv(path+"/"+list_of_names[i]+".csv")
+    dataframes_list.append(temp_df)
+#ref:https://www.geeksforgeeks.org/read-multiple-csv-files-into-separate-dataframes-in-python/
+
+
+#assign values
+B0MM
+
 
 #%% rough plot first for any varaible interested in
 B0_MM=td['B0_MM']
