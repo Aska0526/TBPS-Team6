@@ -15,3 +15,5 @@ where `year3-problem-solving` is the file from Mitesh, downloaded from [here](ht
 By the same folder, I mean this:
 
 ![image](https://user-images.githubusercontent.com/97897047/150685271-84552dd0-0f77-43a6-9484-0c57967a8028.png)
+
+**Note**: you'll need to change your working directory to the folder containing your Python/datasets. Otherwise, your "run" will work but the console might not. I used Pycharm for IDE.
