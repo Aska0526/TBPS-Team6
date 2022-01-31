@@ -2,7 +2,10 @@
 """
 Created on Tue Jan 11 15:34:32 2022
 
-Still messy and trying different things out
+Hi , this is my part.
+
+Still messy and trying different things out, Sometimes went out to code other stuff when checking one criteria....
+
 not good at coding... trying
 
 
