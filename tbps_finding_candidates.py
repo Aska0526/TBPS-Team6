@@ -1,19 +1,27 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jan 11 15:34:32 2022
 
+@author: jingyi
 """
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import numpy as np
 from iminuit import Minuit
-#%%opening up the file 
+import glob
+#%%
+os.chdir(r'C:\Users\jingyi\OneDrive - Imperial College London\Desktop\year3-problem-solving')
+#cwd=os.getcwd()
+#%%  
 # specifying the path to csv files
-path = r"pathname"
+path = r"C:\Users\jingyi\OneDrive - Imperial College London\Desktop\year3-problem-solving"
   
 # csv files in the path
 files = glob.glob(path + "/*.csv")
   
 # assign dataset names
-list_of_names = ['acceptance_mc','jpsi'] #names should be in the order as that in the file
+list_of_names = ['acceptance_mc','jpsi']
  
 # create empty list
 dataframes_list = []
@@ -23,33 +31,27 @@ for i in range(len(list_of_names)):
     temp_df = pd.read_csv(path+"/"+list_of_names[i]+".csv")
     dataframes_list.append(temp_df)
 #ref:https://www.geeksforgeeks.org/read-multiple-csv-files-into-separate-dataframes-in-python/
-
-
-#assign values
-B0MM
-
-
-#%% rough plot first for any varaible interested in
-B0_MM=td['B0_MM']
+#%%
+td=pd.read_csv('total_dataset.csv')
+sig=pd.read_csv('acceptance_mc.csv')
+#pkmm=pd.read_csv('k_pi_swap.csv')
+#%%
+MM=td['B0_MM']
+q2=td['q2']
+q2s=sig['q2']
+#thetal_s=sig['costhetal']
+#pkmmMM=pkmm['B0_MM']
+#%%
 plt.hist(MM,bins=1000)
 plt.xlabel('B0_MM/MeV')
 plt.ylabel('Number of candiates')
 plt.title('Rough examination(no filtering applied')
-
 #%%
-
-#%% Invariant mass filtering 
-
-#%% Forming list of filtered B0 mass, with desired values
-B_name=['B1','B2']
-B_bounds=[[5866,4779],[5500,5000]]
-B_filter=[] #list of filtered B0 using different criterias
-for i in B_bounds:
-    temp_df=td[(td.B0_MM <=i[0])&(td.B0_MM>i[1])]
-    B_filter.append(temp_df)
+plt.hist
+#%%distribution in q2
+plt.hist(q2s,bins=1000)
+plt.xlabel('q2/GeV')
+plt.ylabel('Number of candiates')
+plt.title('q2 sample distribution(no filtering applied')
 #%%
-#Other dicussed criterions: PT of products should be large; B0_IPCHI2_OWNPV shouldn't be too big; B0_DIRA~1; all X^2 can't really be too large for the data to make sense; 
-#identifying background contributions 
-#then finally apply these filtering to the sample data to find acceptance
-#filtering order- strongest to weakest restriction (peel off layer by layer)?
-
+mfilter= td[(td.B0_MM <=5866)&(td.B0_MM>4779)]
