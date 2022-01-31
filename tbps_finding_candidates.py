@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jan 11 15:34:32 2022
-@author: jingyi
-Finding candidates 
+
 """
 import pandas as pd
 import os
