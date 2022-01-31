@@ -6,6 +6,8 @@ Hi , this is my part.
 
 Still messy and trying different things out, Sometimes went out to code other stuff when checking one criteria....
 
+Many repititions
+
 not good at coding... trying
 
 
