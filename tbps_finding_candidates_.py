@@ -2,7 +2,10 @@
 """
 Created on Tue Jan 11 15:34:32 2022
 
-@author: jingyi
+Still messy and trying different things out
+not good at coding... trying
+
+
 """
 import pandas as pd
 import os
@@ -279,6 +282,7 @@ plt.legend(['all 6 chi2 filtered','original'])
 
     
 #%% Fprming list of filtered B0 mass, with desired values
+# I guess this part about B0 filter is on hold, range could not be too strict, turned to focus on backgrounds)
 B_name=['B1','B2']
 B_bounds=[[5866,4779],[5500,5000]]
 B_filter=[]
@@ -319,19 +323,12 @@ plt.ylabel('number')
 plt.title(str(name.name)+' - no filtering applied')
 
 
-plt.hist(MM,bins=1000,histtype=u'step')
-plt.xlabel('B0_MM/MeV')
-plt.ylabel('number')
-plt.title('B0 mass distribution')
-plt.legend(['IP chi2 filtered','original'])
-
 #%% peaking BG:B0 to K* J/psi decay mode- Jpsi rest mass 3096
 #consider q^2 and calculated J/psi
 
 Jpsi_filter=td[(td.B0_MM <3176)&(td.J_psi_MM>2946)]
 
-#%% check if K pi agree with K*
-#Kstar_filter=td[(td.Kstar_MM <)&(td.Kstar_MM>)]
+
 
 #%% peaking BG: misreading K pi and K+ K-
 #calculate K pi mass and campare with phi mass
@@ -347,22 +344,5 @@ plt.title(str(name.name)+' - no filtering applied')
 name=Chifd
 plt.hist(name,bins=1000)
 plt.xlabel(str(name.name))
-plt.ylabel('Number of candiates')
-plt.title(str(name.name)+' - no filtering applied')
-#%% signal
-plt.hist(MMsig,bins=1000)
-plt.xlabel('B0 MM signal/MeV')
-plt.ylabel('Number of candiates')
-plt.title(' signal B0 mass distribution- no filtering applied')
-#%% kpi swap
-plt.hist(kpsMM,bins=1000)
-plt.xlabel('B0 MM signal/MeV')
-plt.ylabel('Number of candiates')
-plt.title(' signal B0 mass distribution- no filtering applied')
-stats.stdev(Chiip) #3.5 ???
-#%% kpi swap K mass
-name=kps.Kstar_MM
-plt.hist(name,bins=1000)
-plt.xlabel('B0 MM signal/MeV')
 plt.ylabel('Number of candiates')
 plt.title(str(name.name)+' - no filtering applied')
