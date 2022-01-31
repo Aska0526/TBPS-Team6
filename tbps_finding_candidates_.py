@@ -36,6 +36,8 @@ for i in range(len(list_of_names)):
     temp_df = pd.read_csv(path+"/"+list_of_names[i]+".csv")
     df_list.append(temp_df)
 #ref:https://www.geeksforgeeks.org/read-multiple-csv-files-into-separate-dataframes-in-python/
+
+
 #%%
 td=df_list[1]
 amc=df_list[0]
@@ -58,24 +60,22 @@ for i in jpsi:
 #sig=pd.read_csv('acceptance_mc.csv')
 #pkmm=pd.read_csv('k_pi_swap.csv')
 
+######################################
+#%% scatter plot td
+td.plot.scatter(x='B0_MM',y='q2',s=0.01)
+plt.plot([5340,5340], [0,25], linestyle='solid', linewidth='1',color='b')
+plt.plot( [5150,5700],[8,8], linestyle='dashed', linewidth='1',color='r')
+plt.plot([5150,5700],[11,11] , linestyle='dashed', linewidth='1',color='r')
+plt.plot([5150,5700],[12.5,12.5], linestyle='dashed', linewidth='1',color='k')
+plt.plot([5150,5700], [15,15], linestyle='dashed', linewidth='1',color='k')
+plt.plot([5220,5220], [0,25], linestyle='solid', linewidth='1',color='b')
+plt.xlim(5179,5700)
+plt.xlabel(' B0_MM/MeV')
+plt.ylabel('q2/GeV')
+plt.title('distribution')
 
 
-#%%td chisqaured 
-MM=td['B0_MM']
-chi_list=[]
-"""
-chi_name=[ 'B0_ENDVERTEX_CHI2', 'B0_FDCHI2_OWNPV',
 
-     'Kstar_ENDVERTEX_CHI2', 'Kstar_FDCHI2_OWNPV', 
-
-    'J_psi_ENDVERTEX_CHI2', 
-
-      'J_psi_FDCHI2_OWNPV', 'B0_IPCHI2_OWNPV','Pi_IPCHI2_OWNPV']
-"""
-chi_name=[ 'B0_IPCHI2_OWNPV','Pi_IPCHI2_OWNPV', 'B0_FDCHI2_OWNPV']# focus on main chi^2 values
-
-ndof=['B0_ENDVERTEX_NDOF','J_psi_ENDVERTEX_NDOF', 'Kstar_ENDVERTEX_NDOF']
-#B0- 5
 # Jpsi, Kstar-1
 dof=[]
 for i in ndof:
@@ -136,24 +136,29 @@ plt.title('Jpsi -- possible backgrounds')
 plt.xlabel('Jpsi_MM/MeV')
 plt.ylabel('Number')
 plt.xlim(3000,4000)
-#%% scatter plot
-td.plot.scatter(x='B0_MM',y='q2',s=0.01)
-plt.plot([5340,5340], [0,25], linestyle='solid', linewidth='1',color='b')
-plt.plot( [5150,5700],[8,8], linestyle='dashed', linewidth='1',color='r')
-plt.plot([5150,5700],[11,11] , linestyle='dashed', linewidth='1',color='r')
-plt.plot([5150,5700],[12.5,12.5], linestyle='dashed', linewidth='1',color='k')
-plt.plot([5150,5700], [15,15], linestyle='dashed', linewidth='1',color='k')
-plt.plot([5220,5220], [0,25], linestyle='solid', linewidth='1',color='b')
-plt.xlim(5179,5700)
-plt.xlabel(' B0_MM/MeV')
-plt.ylabel('q2/GeV')
-plt.title('distribution')
+
 
 #%% histrogram for B0 mass
 plt.hist(td_filter10.B0_MM,bins=1000,histtype=u'step')
 plt.xlabel('B0_MM/MeV')
 plt.ylabel('number')
 plt.title('B0 mass distribution')
+######################################################################################
+%%td chisqaured 
+MM=td['B0_MM']
+chi_list=[]
+"""
+chi_name=[ 'B0_ENDVERTEX_CHI2', 'B0_FDCHI2_OWNPV',
+
+     'Kstar_ENDVERTEX_CHI2', 'Kstar_FDCHI2_OWNPV', 
+
+    'J_psi_ENDVERTEX_CHI2', 
+
+      'J_psi_FDCHI2_OWNPV', 'B0_IPCHI2_OWNPV','Pi_IPCHI2_OWNPV']
+"""
+chi_name=[ 'B0_IPCHI2_OWNPV','Pi_IPCHI2_OWNPV', 'B0_FDCHI2_OWNPV']# focus on main chi^2 values
+
+ndof=['B0_ENDVERTEX_NDOF','J_psi_ENDVERTEX_NDOF', 'Kstar_ENDVERTEX_NDOF']
 #%%chi sqaured plot
 
 for i in chi_list:
