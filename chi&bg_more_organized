@@ -33,6 +33,29 @@ for i in range(len(list_of_names)):
     
 ############################################################################################### 
 #%% functions
+#%% filter general
+def filte1(df,crit,variable,boo): #1 variable
+    if boo==True:
+        for i in range (0, len(crit)):
+             df=df[(df[variable[i]]<crit[i])]
+        return df
+    if boo==False:
+        for i in range (0, len(crit)):
+             df=df[(df[variable[i]]>crit[i])]
+        return df
+
+def filte2(df,crit,variable,boo): #2 boundaries, e.g.: crit=[[lower(smaller) bound, upper bound],[lb2,ub2],[lb3,ub3]]
+  if boo==True:#keep those within range
+        for i in range (0, len(crit)):
+             df=df[(df[variable[i]]<crit[i[1]])&(df[variable[i]]>crit[i[0]])]
+        return df
+    if boo==False:#keep those outside range
+        for i in range (0, len(crit)):
+             df[(df[variable[i]]>crit[i[1]])&(df[variable[i]]<crit[i[0]])]
+        return df
+
+        
+#%%        
 def plots(df,namelist,title):
 """
 plots the mass and angular distributions of a dataset, superposed onthe original td distributions
@@ -50,50 +73,22 @@ plots(td_filter30,anglemass,'td_filter30')
 #%% examine distribution - initial
 anglemass=['B0_MM','costhetal','costhetak','q2','phi']
 plots(td,anglemass)
-#%% prob
-problist=['mu_minus_MC15TuneV1_ProbNNmu', 'mu_plus_MC15TuneV1_ProbNNmu',   'K_MC15TuneV1_ProbNNk'
-      , 'Pi_MC15TuneV1_ProbNNp']
-def prob(df,list,crit): 
-    for i in list :
-        df=df[(df[i]>crit)]
-        
-td_prob=prob(td,prob,0.95)
-
-plots(td_prob,anglemass)   
 
 ############################################################################################### 
 #%% k pi swap removing pi very likely to be K
 
-def filter1(df,crit,variable): 
-    df=df[(df[variable]<crit)]
-    return df
-tdk=filter1(td,0.95,'Pi_MC15TuneV1_ProbNNk')
+tdk=filte(td,[0.95],['Pi_MC15TuneV1_ProbNNk'])
 plots(tdk,anglemass,'td removing pi likely to be k')
 
 
 #%% pion likely to be proton
 
-tdpip=filterless(td,0.90,'Pi_MC15TuneV1_ProbNNp')
+tdpip=filterless(td,[0.90],['Pi_MC15TuneV1_ProbNNp'])
 plots(tdpip,anglemass,'td removing pi likely to be proton')
 
 
 #%% chi^2
 chi_name=[ 'Pi_IPCHI2_OWNPV', 'B0_FDCHI2_OWNPV']
-def filt(df,crit,list):  #dataframe, critical value, name of chi    
-    df=df[(df.Kstar_MM>810)]
-    df=df[(df.B0_IPCHI2_OWNPV>crit)]
-    for i in list :
-        df=df[(df[i]>crit)]
-    #df1=df[(df.J_psi_MM <3090)|(df.J_psi_MM >)&(df.B0_MM<5230)]
-    #|(df.J_psi_MM<3200))
-    #|(df.B0_MM>5350))]
-    
-    #df = df.drop(index=df1.index)
-    #df=df[(df.J_psi_MM <3690)|(df.J_psi_MM>3700)]
-    #df=df[(df.q2 >1.1)|(df.q2<0.98)]
-    #df=df[(df.q2 >15)|(df.q2<12.5)]
-    #df=df[(df.q2 >10)|(df.q2<9)]    
-    #df_filter2=df_filter1[df_filter1.mu_plus_MC15TuneV1_ProbNNmu>0.95]
-    return df
+
         
         
