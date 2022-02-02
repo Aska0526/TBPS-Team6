@@ -100,6 +100,8 @@ chi_name=[ 'Pi_IPCHI2_OWNPV', 'B0_FDCHI2_OWNPV']
 
 #%% q2 filter example- for psi 2 S
 tdq2=filte2(td,[[8,11]],['q2'],True)
+plots(tdq2,anglemass,'td q2>11 or q2<8')
+
 
 
 
