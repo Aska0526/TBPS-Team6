@@ -44,14 +44,15 @@ def filte1(df,crit,variable,boo): #1 variable
              df=df[(df[variable[i]]>crit[i])]
         return df
 
+
 def filte2(df,crit,variable,boo): #2 boundaries, e.g.: crit=[[lower(smaller) bound, upper bound],[lb2,ub2],[lb3,ub3]]
   if boo==True:#keep those within range
         for i in range (0, len(crit)):
-             df=df[(df[variable[i]]<crit[i[1]])&(df[variable[i]]>crit[i[0]])]
+             df=df[(df[variable[i]]<crit[i][1])&(df[variable[i]]>crit[i][0])]
         return df
-    if boo==False:#keep those outside range
+  if boo==False:#keep those outside range
         for i in range (0, len(crit)):
-             df[(df[variable[i]]>crit[i[1]])|(df[variable[i]]<crit[i[0]])]
+             df[(df[variable[i]]>crit[i][1])|(df[variable[i]]<crit[i][0])]
         return df
 
         
