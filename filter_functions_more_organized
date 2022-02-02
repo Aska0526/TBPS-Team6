@@ -45,7 +45,14 @@ def filte1(df,crit,variable,boo): #1 variable
         return df
 
 
-def filte2(df,crit,variable,boo): #2 boundaries, e.g.: crit=[[lower(smaller) bound, upper bound],[lb2,ub2],[lb3,ub3]]
+def filte2(df,crit,variable,boo):
+"""
+Df=dataframe
+Crit= boundary pairs lists
+2 boundaries, e.g.: crit=[[lower(smaller) bound, upper bound],[lb2,ub2],[lb3,ub3]]
+Variable= what you are filtering
+Boo=True/false
+"""
   if boo==True:#keep those within range
         for i in range (0, len(crit)):
              df=df[(df[variable[i]]<crit[i][1])&(df[variable[i]]>crit[i][0])]
