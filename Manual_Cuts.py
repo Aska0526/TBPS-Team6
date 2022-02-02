@@ -1,4 +1,22 @@
-#%% Imports 
+#%% All Filters - NEED TO RUN IMPORTS AND DATA IMPORT CELLS BELOW FIRST 
+td_af = td
+td_af = td_af.drop(td_af[(td_af['mu_minus_PT'] < 1.7*(10**3)) | (td_af['mu_plus_PT'] < 1.7*(10**3))].index)
+td_af = td_af.drop(td_af[(td_af['B0_FD_OWNPV'] < 0.5*(10**1))].index)
+td_af = td_af.drop(td_af[(td_af['B0_IPCHI2_OWNPV'] > 9)].index)
+td_af = td_af.drop(td_af[(td_af['B0_ENDVERTEX_CHI2'] > 6)].index)
+td_af = td_af.drop(td_af[(td_af['mu_minus_IPCHI2_OWNPV'] < 16) | (td_af['mu_plus_IPCHI2_OWNPV'] < 16)].index)
+td_af = td_af.drop(td_af[(td_af['B0_DIRA_OWNPV'] < 0.99999)].index)
+td_af = td_af.drop(td_af[(td_af['q2'] < 11) & (td_af['q2'] > 8)].index)
+td_af = td_af.drop(td_af[(td_af['q2'] < 15) & (td_af['q2'] > 12.5)].index)
+td_Af = td_af.drop(td_af[(td_af['q2'] < 1.1) & (td_af['q2'] > 0.98)].index)
+B0_MM_af=td_af['B0_MM']
+plt.hist(B0_MM_af,bins=200)
+plt.xlabel('B0_MM/MeV')
+plt.ylabel('Number of candiates')
+plt.title('Filtered for all criteria')
+plt.show()
+#%%
+# Imports 
 import pandas as pd
 import os
 import matplotlib
