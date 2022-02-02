@@ -51,7 +51,7 @@ def filte2(df,crit,variable,boo): #2 boundaries, e.g.: crit=[[lower(smaller) bou
         return df
     if boo==False:#keep those outside range
         for i in range (0, len(crit)):
-             df[(df[variable[i]]>crit[i[1]])&(df[variable[i]]<crit[i[0]])]
+             df[(df[variable[i]]>crit[i[1]])|(df[variable[i]]<crit[i[0]])]
         return df
 
         
@@ -77,18 +77,25 @@ plots(td,anglemass)
 ############################################################################################### 
 #%% k pi swap removing pi very likely to be K
 
-tdk=filte(td,[0.95],['Pi_MC15TuneV1_ProbNNk'])
+tdk=filte1(td,[0.95],['Pi_MC15TuneV1_ProbNNk'])
 plots(tdk,anglemass,'td removing pi likely to be k')
 
 
 #%% pion likely to be proton
 
-tdpip=filterless(td,[0.90],['Pi_MC15TuneV1_ProbNNp'])
+tdpip=filte1(td,[0.90],['Pi_MC15TuneV1_ProbNNp'])
 plots(tdpip,anglemass,'td removing pi likely to be proton')
 
 
 #%% chi^2
 chi_name=[ 'Pi_IPCHI2_OWNPV', 'B0_FDCHI2_OWNPV']
+
+#%% q2 filter example- for psi 2 S
+tdq2=filte2(td,[[8,11]],['q2'],True)
+
+
+
+
 
         
         
