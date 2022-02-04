@@ -12,7 +12,8 @@ import matplotlib as mpl
 from scipy.optimize import curve_fit
 from iminuit import Minuit
 
-mpl.rcParams.update(mpl.rcParamsDefault)
+
+# mpl.rcParams.update(mpl.rcParamsDefault)
 
 #%%
 """
@@ -40,6 +41,18 @@ def combined(x, a, b, mu_exp, sigma, A, mu_gauss):
     The combined signal pattern
     """
     return bckgrd(x, a, b, mu_exp) + gaussian(x, sigma, A, mu_gauss)
+
+
+def acceptance_series(ci, cj, cm, cn, ctl, ctk, phi, q2):
+    """
+    ci blah blah is the summation series coeff. The size of the input array dictates the order of the polynomial
+    ctk, ctl... is the argument of the legendre poly
+    """
+    sum1 = np.polynomial.legendre.Legendre(ci)
+    sum2 = np.polynomial.legendre.Legendre(cj)
+    sum3 = np.polynomial.legendre.Legendre(cm)
+    sum4 = np.polynomial.legendre.Legendre(cn)
+    return sum1(ctl) * sum2(ctk) * sum3(phi) * sum4(q2)
 
 
 td = pd.read_pickle(r'year3-problem-solving\total_dataset.pkl')
