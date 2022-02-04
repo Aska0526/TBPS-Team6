@@ -44,34 +44,34 @@ def combined(x, a, b, mu_exp, sigma, A, mu_gauss):
 
 def bin_num(dataset, num):
     if num == 0:
-        dataset = 0.1 < dataset['q2'] < 0.98
+        dataset = dataset[(dataset['q2'] > 0.1) & (dataset['q2'] > 0.98)]
         return dataset
     elif num == 1:
-        dataset = 1.1 < dataset['q2'] < 2.5
+        dataset = dataset[(dataset['q2'] > 1.1) & (dataset['q2'] > 2.5)]
         return dataset
     elif num == 2:
-        dataset = 2.5 < dataset['q2'] < 4.0
+        dataset = dataset[(dataset['q2'] > 2.5) & (dataset['q2'] > 4.0)]
         return dataset
     elif num == 3:
-        dataset = 4.0 < dataset['q2'] < 6.0
+        dataset = dataset[(dataset['q2'] > 4.0) & (dataset['q2'] > 6.0)]
         return dataset
     elif num == 4:
-        dataset = 6.0 < dataset['q2'] < 8.0
+        dataset = dataset[(dataset['q2'] > 6.0) & (dataset['q2'] > 8.0)]
         return dataset
     elif num == 5:
-        dataset = 15.0 < dataset['q2'] < 17.0
+        dataset = dataset[(dataset['q2'] > 15.0) & (dataset['q2'] > 17.0)]
         return dataset
     elif num == 6:
-        dataset = 17.0 < dataset['q2'] < 19.0
+        dataset = dataset[(dataset['q2'] > 17.0) & (dataset['q2'] > 19.0)]
         return dataset
     elif num == 7:
-        dataset = 11.0 < dataset['q2'] < 12.5
+        dataset = dataset[(dataset['q2'] > 11.0) & (dataset['q2'] > 12.5)]
         return dataset
     elif num == 8:
-        dataset = 1.0 < dataset['q2'] < 6.0
+        dataset = dataset[(dataset['q2'] > 1.0) & (dataset['q2'] > 6.0)]
         return dataset
     elif num == 9:
-        dataset = 15.0 < dataset['q2'] < 17.9
+        dataset = dataset[(dataset['q2'] > 15.0) & (dataset['q2'] > 17.0)]
         return dataset
 
 
@@ -93,6 +93,7 @@ df_10 = pd.read_pickle(r'chi^2 filtered data\td 10%.pkl')
 df_30 = pd.read_pickle(r'chi^2 filtered data\td 30%.pkl')
 B_mass = np.array([df_5['B0_MM'], df_10['B0_MM'], df_30['B0_MM']], dtype=object)
 
+bin_1 = bin_num(df_10, 6)
 #%%
 """
 Setup the axes for histogram 
