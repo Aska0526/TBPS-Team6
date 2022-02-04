@@ -12,12 +12,11 @@ import matplotlib as mpl
 from scipy.optimize import curve_fit
 from iminuit import Minuit
 
-
 # mpl.rcParams.update(mpl.rcParamsDefault)
 
 #%%
 """
-Defines the combinatorial background
+Define various functions
 and loads the data
 """
 
@@ -41,6 +40,39 @@ def combined(x, a, b, mu_exp, sigma, A, mu_gauss):
     The combined signal pattern
     """
     return bckgrd(x, a, b, mu_exp) + gaussian(x, sigma, A, mu_gauss)
+
+
+def bin_num(dataset, num):
+    if num == 0:
+        dataset = 0.1 < dataset['q2'] < 0.98
+        return dataset
+    elif num == 1:
+        dataset = 1.1 < dataset['q2'] < 2.5
+        return dataset
+    elif num == 2:
+        dataset = 2.5 < dataset['q2'] < 4.0
+        return dataset
+    elif num == 3:
+        dataset = 4.0 < dataset['q2'] < 6.0
+        return dataset
+    elif num == 4:
+        dataset = 6.0 < dataset['q2'] < 8.0
+        return dataset
+    elif num == 5:
+        dataset = 15.0 < dataset['q2'] < 17.0
+        return dataset
+    elif num == 6:
+        dataset = 17.0 < dataset['q2'] < 19.0
+        return dataset
+    elif num == 7:
+        dataset = 11.0 < dataset['q2'] < 12.5
+        return dataset
+    elif num == 8:
+        dataset = 1.0 < dataset['q2'] < 6.0
+        return dataset
+    elif num == 9:
+        dataset = 15.0 < dataset['q2'] < 17.9
+        return dataset
 
 
 def acceptance_series(ci, cj, cm, cn, ctl, ctk, phi, q2):
@@ -99,6 +131,9 @@ axs_q2[0].hist(q_sq[0], bins=200)
 axs_q2[1].hist(q_sq[1], bins=200)
 axs_q2[2].hist(q_sq[2], bins=200)
 plt.show()
+
+#%%
+plt.hist(df_10['costhetal'], bins=200)
 
 #%%
 """
