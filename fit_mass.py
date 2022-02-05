@@ -12,13 +12,10 @@ import matplotlib as mpl
 from scipy.optimize import curve_fit
 from iminuit import Minuit
 
+
 # mpl.rcParams.update(mpl.rcParamsDefault)
 
-#%%
-"""
-Define various functions
-and loads the data
-"""
+# Define various functions and loads the data
 
 
 def bckgrd(x, a, b, mu_exp):
@@ -44,34 +41,34 @@ def combined(x, a, b, mu_exp, sigma, A, mu_gauss):
 
 def bin_num(dataset, num):
     if num == 0:
-        dataset = dataset[(dataset['q2'] > 0.1) & (dataset['q2'] > 0.98)]
+        dataset = dataset[(dataset['q2'] > 0.1) & (dataset['q2'] < 0.98)]
         return dataset
     elif num == 1:
-        dataset = dataset[(dataset['q2'] > 1.1) & (dataset['q2'] > 2.5)]
+        dataset = dataset[(dataset['q2'] > 1.1) & (dataset['q2'] < 2.5)]
         return dataset
     elif num == 2:
-        dataset = dataset[(dataset['q2'] > 2.5) & (dataset['q2'] > 4.0)]
+        dataset = dataset[(dataset['q2'] > 2.5) & (dataset['q2'] < 4.0)]
         return dataset
     elif num == 3:
-        dataset = dataset[(dataset['q2'] > 4.0) & (dataset['q2'] > 6.0)]
+        dataset = dataset[(dataset['q2'] > 4.0) & (dataset['q2'] < 6.0)]
         return dataset
     elif num == 4:
-        dataset = dataset[(dataset['q2'] > 6.0) & (dataset['q2'] > 8.0)]
+        dataset = dataset[(dataset['q2'] > 6.0) & (dataset['q2'] < 8.0)]
         return dataset
     elif num == 5:
-        dataset = dataset[(dataset['q2'] > 15.0) & (dataset['q2'] > 17.0)]
+        dataset = dataset[(dataset['q2'] > 15.0) & (dataset['q2'] < 17.0)]
         return dataset
     elif num == 6:
-        dataset = dataset[(dataset['q2'] > 17.0) & (dataset['q2'] > 19.0)]
+        dataset = dataset[(dataset['q2'] > 17.0) & (dataset['q2'] < 19.0)]
         return dataset
     elif num == 7:
-        dataset = dataset[(dataset['q2'] > 11.0) & (dataset['q2'] > 12.5)]
+        dataset = dataset[(dataset['q2'] > 11.0) & (dataset['q2'] < 12.5)]
         return dataset
     elif num == 8:
-        dataset = dataset[(dataset['q2'] > 1.0) & (dataset['q2'] > 6.0)]
+        dataset = dataset[(dataset['q2'] > 1.0) & (dataset['q2'] < 6.0)]
         return dataset
     elif num == 9:
-        dataset = dataset[(dataset['q2'] > 15.0) & (dataset['q2'] > 17.0)]
+        dataset = dataset[(dataset['q2'] > 15.0) & (dataset['q2'] < 17.0)]
         return dataset
 
 
@@ -87,13 +84,65 @@ def acceptance_series(ci, cj, cm, cn, ctl, ctk, phi, q2):
     return sum1(ctl) * sum2(ctk) * sum3(phi) * sum4(q2)
 
 
+#%%
+ds = pd.read_pickle(r'year3-problem-solving\total_dataset.pkl')
+
+# choose candidates with one muon PT > 1.7GeV
+PT_mu_filter = (ds['mu_minus_PT'] >= 1.7 * (10 ** 3)) | (ds['mu_plus_PT'] >= 1.7 * (10 ** 3))
+
+# Selected B0_IPCHI2<9  (3 sigma)
+IP_B0_filter = ds['B0_IPCHI2_OWNPV'] < 9
+
+# should be numerically similar to number of degrees of freedom for the decay (5)
+end_vertex_chi2_filter = ds['B0_ENDVERTEX_CHI2'] < 6
+
+# At least one of the daughter particles should have IPCHI2>16 (4 sigma)
+daughter_IP_chi2_filter = (ds['mu_minus_PT'] >= 16) | (ds['mu_plus_PT'] >= 16)
+
+# B0 should travel about 1cm (Less sure about this one - maybe add an upper limit?)
+flight_distance_B0_filter = ds['B0_FD_OWNPV'] > 0.5 * (10 ** 1)
+
+# cos(DIRA) should be close to 1
+DIRA_angle_filter = ds['B0_DIRA_OWNPV'] > 0.99999
+
+# Remove J/psi peaking background
+Jpsi_filter = (ds["q2"] <= 8) | (ds["q2"] >= 11)
+
+# Remove psi(2S) peaking background
+psi2S_filter = (ds["q2"] <= 12.5) | (ds["q2"] >= 15)
+
+# Possible pollution from Bo -> K*0 psi(-> mu_plus mu_minus)
+phi_filter = (ds['q2'] <= 0.98) | (ds['q2'] >= 1.1)
+
+# Pion likely to be kaon
+pi_to_be_K_filter = ds["Pi_MC15TuneV1_ProbNNk"] < 0.95
+
+# Kaon likely to be pion
+K_to_be_pi_filter = ds["K_MC15TuneV1_ProbNNpi"] < 0.95
+
+# pion likely to be proton
+pi_to_be_p_filter = ds["Pi_MC15TuneV1_ProbNNp"] < 0.9
+
+#Applying filters (you can remove any filter to play around with them)
+ds_filtered = ds[
+    end_vertex_chi2_filter
+    & daughter_IP_chi2_filter
+    & flight_distance_B0_filter
+    & DIRA_angle_filter
+    # & Jpsi_filter
+    # & psi2S_filter
+    # & phi_filter
+    # & pi_to_be_K_filter
+    # & K_to_be_pi_filter
+    # & pi_to_be_p_filter
+    ]
+#%%
 td = pd.read_pickle(r'year3-problem-solving\total_dataset.pkl')
 df_5 = pd.read_pickle(r'chi^2 filtered data\td 5% (1).pkl')
 df_10 = pd.read_pickle(r'chi^2 filtered data\td 10%.pkl')
 df_30 = pd.read_pickle(r'chi^2 filtered data\td 30%.pkl')
 B_mass = np.array([df_5['B0_MM'], df_10['B0_MM'], df_30['B0_MM']], dtype=object)
 
-bin_1 = bin_num(df_10, 6)
 #%%
 """
 Setup the axes for histogram 
