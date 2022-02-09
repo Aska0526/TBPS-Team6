@@ -72,9 +72,10 @@ def bin_num(dataset, num):
         return dataset
 
 
-def acceptance_series(ci, cj, cm, cn, ctl, ctk, phi, q2):
+def legendre_series(ci, ctl, cj=1, ctk=1, cm=1, phi=1, cn=1, q2=1):
     """
     ci blah blah is the summation series coeff. The size of the input array dictates the order of the polynomial
+    NOTE: Order starts from 0 eg ci=[5] returns y=5 as the polynomial, 3rd order needs array with 4 elements etc
     ctk, ctl... is the argument of the legendre poly
     """
     sum1 = np.polynomial.legendre.Legendre(ci)
@@ -82,6 +83,15 @@ def acceptance_series(ci, cj, cm, cn, ctl, ctk, phi, q2):
     sum3 = np.polynomial.legendre.Legendre(cm)
     sum4 = np.polynomial.legendre.Legendre(cn)
     return sum1(ctl) * sum2(ctk) * sum3(phi) * sum4(q2)
+
+
+def log_likelihood(c0, c1, c2, c3, c4):
+    a = np.polynomial.Legendre([c0, c1, c2, c3, c4])
+    return -np.sum(np.log(a(ctl)))
+
+
+def fourth_poly(x, a0, a1, a2, a3, a4):
+    return (a4 * x ** 4) + (a3 * x ** 3) + (a2 * x ** 2) + (a1 * x) + a0
 
 
 #%%
@@ -173,58 +183,39 @@ plt.show()
 
 #%%
 """
-Plots histogram of the q^2 distribution (crudely)
-"""
-q_sq = np.array([df_5['q2'], df_10['q2'], df_30['q2']], dtype=object)
-f_q2, axs_q2 = plt.subplots(3, 1)
-axs_q2[0].hist(q_sq[0], bins=200)
-axs_q2[1].hist(q_sq[1], bins=200)
-axs_q2[2].hist(q_sq[2], bins=200)
-plt.show()
+Performs curve fit for acceptance data after Gaussian elimination for initial guesses"""
+ds = pd.read_pickle(r'year3-problem-solving\acceptance_mc.pkl')
+ctl = bin_num(ds, 8)['costhetal']  # Loads the costhetal for the 1 < q2 < 6 bin
+heights, edges, _ = plt.hist(ctl, bins=100, density=True, histtype='step', label='Data')
+x = np.array([(edges[i] + edges[i + 1]) / 2 for i in range(len(edges) - 1)])  # Finds centre of each HISTOGRAM bin
 
-#%%
-plt.hist(df_10['costhetal'], bins=200)
+x_array = np.array([[x[0] ** i for i in range(5)],  # Defines the matrix for costhetal
+                    [(x[len(edges) // 4]) ** i for i in range(5)],
+                    [(x[len(edges) // 2]) ** i for i in range(5)],
+                    [(x[int(len(edges) // 1.2)]) ** i for i in range(5)],
+                    [x[-1] ** i for i in range(5)]])
 
-#%%
-"""
-Should (?) show plot the signal noise ratio versus the chi_sq threshold
-(whatever that means...)
-"""
+y_array = np.array([[heights[0]],  # Defines matrix/vector for the histogram height
+                    [heights[len(edges) // 4]],
+                    [heights[len(edges) // 2]],
+                    [heights[int(len(edges) // 1.2)]],
+                    [heights[-1]]])
 
+coeff = np.linalg.solve(x_array, y_array)  # Solves for the coeffs of the polynomial
 
-def full_filter(file, thres, column=None):
-    """
-    Selects only the likely candidates (maybe?)
-    The column arg can be left empty, otherwise can choose the column u want
-    """
-    file_fild = file[file['Kstar_MM'] > 800]
-    file_fild = file_fild[file_fild['B0_IPCHI2_OWNPV'] > thres]
-    file_fild = file_fild[file_fild['Pi_IPCHI2_OWNPV'] > thres]
-    file_fild = file_fild[file_fild['B0_FDCHI2_OWNPV'] > thres]
-    if column is None:
-        return file_fild
-    else:
-        return file_fild[column]
+coeff, cov = curve_fit(fourth_poly, x, heights, p0=coeff)
+plt.plot(x, fourth_poly(x, *coeff), label='Fit')
+plt.plot(x, heights / fourth_poly(x, *coeff), label=r'$\frac{Data}{Fit}$')
+plt.title('Acceptance_mc')
+plt.xlabel(r'$cos(\theta_l)$')
+plt.ylabel('Number')
+plt.legend()
 
+############################# Old unused code ########################################
 
-def log_likelihood(thres):
-    """
-    NOT THE LOG LIKELIHOOD FUNCTION YET...
-    This will fit the chopped data and finds the ratio of signal and noise
-    """
-    p0 = [2000, 0.0003, 5200, 50, 2000, 5300]
-    result = []
-    for i in thres:
-        fil_data = full_filter(td, i, 'B0_MM')
-        height, edges, _ = plt.hist(fil_data, bins=200, range=[5180, 5700])
-        popt, pcov = curve_fit(combined, edges[:-1], height, p0=p0)
-        r = popt[4] / popt[0]
-        result.append(r)
-    plt.close('all')
-    return result
-
-
-threshold = np.linspace(0.1, 6, 100)
-
-plt.plot(threshold, log_likelihood(threshold), 'x')
-plt.show()
+# plt.plot(np.linspace(-1,1, 500), [log_likelihood(0.6, -0.37, 0.43, 0.38, i) for i in np.linspace(-1,1, 500)])
+# log_likelihood.errordef = Minuit.LIKELIHOOD
+# m = Minuit(log_likelihood, 0.6, -0.37, 0.43, 0.38, -0.88)
+# m.migrad()
+# param = m.values
+# plt.plot(x, legendre_series(param, x))
