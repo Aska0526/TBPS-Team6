@@ -8,11 +8,9 @@ Created on Fri Jan 28 15:49:24 2022
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib as mpl
 from scipy.optimize import curve_fit
 from iminuit import Minuit
-
-
+from scipy.integrate import trapezoid
 # mpl.rcParams.update(mpl.rcParamsDefault)
 
 # Define various functions and loads the data
@@ -39,7 +37,7 @@ def combined(x, a, b, mu_exp, sigma, A, mu_gauss):
     return bckgrd(x, a, b, mu_exp) + gaussian(x, sigma, A, mu_gauss)
 
 
-def bin_num(dataset, num):
+def bin_num(dataset, num=None):  # Leave second argument empty to do nothing
     if num == 0:
         dataset = dataset[(dataset['q2'] > 0.1) & (dataset['q2'] < 0.98)]
         return dataset
@@ -70,6 +68,8 @@ def bin_num(dataset, num):
     elif num == 9:
         dataset = dataset[(dataset['q2'] > 15.0) & (dataset['q2'] < 17.0)]
         return dataset
+    else:
+        return dataset
 
 
 def legendre_series(ci, ctl, cj=1, ctk=1, cm=1, phi=1, cn=1, q2=1):
@@ -85,13 +85,13 @@ def legendre_series(ci, ctl, cj=1, ctk=1, cm=1, phi=1, cn=1, q2=1):
     return sum1(ctl) * sum2(ctk) * sum3(phi) * sum4(q2)
 
 
-def log_likelihood(c0, c1, c2, c3, c4):
-    a = np.polynomial.Legendre([c0, c1, c2, c3, c4])
-    return -np.sum(np.log(a(ctl)))
-
-
-def fourth_poly(x, a0, a1, a2, a3, a4):
-    return (a4 * x ** 4) + (a3 * x ** 3) + (a2 * x ** 2) + (a1 * x) + a0
+def poly(x, a0, a1, a2, a3, a4, a5, a6):  # doesnt get much better after order 6
+    """
+    set the jth coeff of the power series by aj
+    has to do it this way since curve_fit unpacks p0 automatically
+    np.polynomial.Polynomial sets up the power series in ascending order
+    """
+    return np.polynomial.Polynomial([a0, a1, a2, a3, a4, a5, a6])(x)
 
 
 #%%
@@ -138,7 +138,7 @@ ds_filtered = ds[
     end_vertex_chi2_filter
     & daughter_IP_chi2_filter
     & flight_distance_B0_filter
-    & DIRA_angle_filter
+    # & DIRA_angle_filter
     # & Jpsi_filter
     # & psi2S_filter
     # & phi_filter
@@ -183,30 +183,38 @@ plt.show()
 
 #%%
 """
-Performs curve fit for acceptance data after Gaussian elimination for initial guesses"""
+Performs curve fit for acceptance data after Gaussian elimination for initial guesses
+"""
 ds = pd.read_pickle(r'year3-problem-solving\acceptance_mc.pkl')
 ctl = bin_num(ds, 8)['costhetal']  # Loads the costhetal for the 1 < q2 < 6 bin
 heights, edges, _ = plt.hist(ctl, bins=100, density=True, histtype='step', label='Data')
 x = np.array([(edges[i] + edges[i + 1]) / 2 for i in range(len(edges) - 1)])  # Finds centre of each HISTOGRAM bin
 
-x_array = np.array([[x[0] ** i for i in range(5)],  # Defines the matrix for costhetal
-                    [(x[len(edges) // 4]) ** i for i in range(5)],
-                    [(x[len(edges) // 2]) ** i for i in range(5)],
-                    [(x[int(len(edges) // 1.2)]) ** i for i in range(5)],
-                    [x[-1] ** i for i in range(5)]])
+x_array = np.array([[x[0] ** i for i in range(7)],  # Defines the matrix for costhetal.
+                    [(x[len(edges) // 10]) ** i for i in range(7)],
+                    [(x[len(edges) // 2]) ** i for i in range(7)],
+                    [(x[len(edges) // -5]) ** i for i in range(7)],
+                    [(x[len(edges) // -9]) ** i for i in range(7)],
+                    [(x[int(len(edges) // 1.1)]) ** i for i in range(7)],
+                    [x[-1] ** i for i in range(7)]])
 
-y_array = np.array([[heights[0]],  # Defines matrix/vector for the histogram height
-                    [heights[len(edges) // 4]],
-                    [heights[len(edges) // 2]],
-                    [heights[int(len(edges) // 1.2)]],
+y_array = np.array([[heights[0]],  # Defines matrix/vector for the histogram height. NOTE should match the order of poly
+                    [heights[len(edges) // 10]],
+                    [x[len(edges) // 2]],
+                    [x[len(edges) // -5]],
+                    [x[len(edges) // -9]],
+                    [heights[int(len(edges) // 1.1)]],
                     [heights[-1]]])
 
-coeff = np.linalg.solve(x_array, y_array)  # Solves for the coeffs of the polynomial
+coeff = np.linalg.solve(x_array, y_array)[:, 0]  # Solves for the coeffs of the polynomial
 
-coeff, cov = curve_fit(fourth_poly, x, heights, p0=coeff)
-plt.plot(x, fourth_poly(x, *coeff), label='Fit')
-plt.plot(x, heights / fourth_poly(x, *coeff), label=r'$\frac{Data}{Fit}$')
-plt.title('Acceptance_mc')
+coeff, cov = curve_fit(poly, x, heights, p0=coeff)
+
+norm = trapezoid(poly(x, *coeff), x)
+
+plt.plot(x, poly(x, *coeff), label='Fit')
+plt.plot(x, heights / poly(x, *coeff), label=r'$\frac{Data}{Fit}$')
+plt.title('Acceptance_mc bin 0')
 plt.xlabel(r'$cos(\theta_l)$')
 plt.ylabel('Number')
 plt.legend()
