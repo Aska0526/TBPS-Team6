@@ -4,9 +4,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 #%%
 #Enter your data path here:
-# DATA_PATH = "Data/total_dataset.pkl"
+DATA_PATH = "Data/total_dataset.pkl"
 # DATA_PATH = "Data/signal.pkl"
-DATA_PATH = "Data/acceptance_mc.pkl"
+# DATA_PATH = "Data/acceptance_mc.pkl"
 
 ds = pd.read_pickle(DATA_PATH)
 #%%
@@ -46,7 +46,6 @@ K_to_be_pi_filter = ds["K_MC15TuneV1_ProbNNpi"] < 0.95
 # pion likely to be proton
 pi_to_be_p_filter = ds["Pi_MC15TuneV1_ProbNNp"] < 0.9
 
-
 #%%
 #Applying filters (you can remove any filter to play around with them)
 ds_filtered = ds[
@@ -61,6 +60,8 @@ ds_filtered = ds[
     # & K_to_be_pi_filter
     # & pi_to_be_p_filter
 ]
+
+ds_filtered.to_pickle(f"Output_Data/dataset_manual_filter_1.pkl")
 
 #%%
 plt.hist(ds_filtered["B0_MM"], bins=100)
