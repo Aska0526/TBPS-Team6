@@ -20,9 +20,8 @@ os.chdir()
 
 def filters(df):
     '''find acceptance function'''
-
-    # choose candidates with one muon PT > 3.5GeV 2018 DOI:10.1007/JHEP10(2018)047
-    PT_mu_filter = df['mu_minus_PT'] >= 3.5*(10**3)
+       #arxiv:1112.3515v3
+    PT_mu_filter = df['mu_minus_PT'] >= 1.5*(10**3)
     # DOI:10.1007/JHEP10(2018)047
     PT_K_filter = (df['K_PT'] +df['Pi_PT'])>= 3*(10**3)
     # Physics Letters B 753 (2016) 424–448
@@ -30,7 +29,7 @@ def filters(df):
 # Selected B0_IPCHI2<9  (3 sigma) 
     IP_B0_filter = df['B0_IPCHI2_OWNPV'] < 9
  
-        #1112.3515v3
+        #arxiv:1112.3515v3
     Kstarmass= (df['Kstar_MM'] <= 992) & (df['Kstar_MM'] >= 792)
 
 # should be numerically similar to number of degrees of freedom for the decay (5) 
@@ -55,13 +54,13 @@ def filters(df):
     phi_filter = (df['q2'] <= 0.98) | (df['q2'] >= 1.1)
 
 # Pion likely to be kaon
-    pi_to_be_K_filter = df["Pi_MC15TuneV1_ProbNNk"] < 0.95
+    pi_to_be_K_filter = df["Pi_MC15TuneV1_ProbNNk"] < 0.8
 
 # Kaon likely to be pion
-    K_to_be_pi_filter = df["K_MC15TuneV1_ProbNNpi"] < 0.95
+    K_to_be_pi_filter = df["K_MC15TuneV1_ProbNNpi"] < 0.8
 
 # pion likely to be proton
-    pi_to_be_p_filter = df["Pi_MC15TuneV1_ProbNNp"] < 0.9
+    pi_to_be_p_filter = df["Pi_MC15TuneV1_ProbNNp"] < 0.8
 
 
 #Applying filters (you can remove any filter to play around with them)
