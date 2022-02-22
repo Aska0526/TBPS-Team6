@@ -28,16 +28,16 @@ def filters(df):
     # Physics Letters B 753 (2016) 424–448
     PT_B0_filter =( df['mu_plus_PT']+df['mu_minus_PT']+df['K_PT']+df['Pi_PT']) >= 8*(10**3)
 # Selected B0_IPCHI2<9  (3 sigma) 
-    IP_B0_filter = df['B0_IPCHI2_OWNPV'] < 6
+    IP_B0_filter = df['B0_IPCHI2_OWNPV'] < 9
  
-    #Physics Letters B 753 (2016) 424–448 
-    Kstarmass= (df['Kstar_MM'] <= 1000) & (df['Kstar_MM'] >= 800)
+        #1112.3515v3
+    Kstarmass= (df['Kstar_MM'] <= 992) & (df['Kstar_MM'] >= 792)
 
 # should be numerically similar to number of degrees of freedom for the decay (5) 
     end_vertex_chi2_filter = df['B0_ENDVERTEX_CHI2'] < 10
 
 # At least one of the daughter particles should have IPCHI2>16 (4 sigma) 
-    daughter_IP_chi2_filter = (df['mu_minus_PT'] >= 16) | (df['mu_plus_PT'] >= 16)
+    daughter_IP_chi2_filter = (df['mu_minus_IPCHI2_OWNPV'] >= 16) | (df['mu_plus_IPCHI2_OWNPV'] >= 16)
     
 # B0 should travel about 10mm (Less sure about this one - maybe add an upper limit?) 
     flight_distance_B0_filter =(df['B0_FD_OWNPV'] <= 500) & (df['B0_FD_OWNPV'] >= 8)
