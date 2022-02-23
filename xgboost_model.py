@@ -45,7 +45,10 @@ mass_filter = df_total['B0_MM'] >= 5350
 
 df_background = df_total[mass_filter]
 
-df_signal = df_signal.sample(n=len(df_background), random_state=6)
+#%%
+# df_signal = df_signal.sample(n=len(df_background), random_state=6)
+
+df_background = df_background.sample(n=len(df_signal), random_state=6, replace=True)
 
 #%%
 df_signal["B0_PT"] = df_signal["mu_minus_PT"] + df_signal["mu_plus_PT"] + df_signal["K_PT"] + df_signal["Pi_PT"]
