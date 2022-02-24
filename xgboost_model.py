@@ -41,7 +41,7 @@ df_signal["B0_PZ"] = df_signal["mu_minus_PZ"] + df_signal["mu_plus_PZ"] + df_sig
 df_signal["B0_PE"] = df_signal["mu_minus_PE"] + df_signal["mu_plus_PE"] + df_signal["K_PE"] + df_signal["Pi_PE"]
 
 #%%
-drop_columns = ["year", "B0_MM"]
+drop_columns = ["year", "B0_MM", "q2"]
 df_test_xgb = df_test.drop(columns=drop_columns)
 #%%
 mass_filter = df_total['B0_MM'] >= 5350
@@ -73,15 +73,15 @@ x_train, x_validate, y_train, y_validate = train_test_split(
     random_state=6)
 
 #%%
-max_depth = 12
+max_depth = 9
 xg_clf = xgb.XGBClassifier(n_estimators=300, verbosity=1, eta=0.1, max_depth=max_depth)
 
 xg_clf.fit(x_train, y_train, eval_set=[(x_train, y_train), (x_validate, y_validate)], early_stopping_rounds=10)
 #%%
-# xg_clf.fit(x_train, y_train, eval_set=[(x_train, y_train), (x_validate, y_validate)], xgb_model=xg_clf.get_booster(), early_stopping_rounds=10)
+xg_clf.fit(x_train, y_train, eval_set=[(x_train, y_train), (x_validate, y_validate)], xgb_model=xg_clf.get_booster(), early_stopping_rounds=10)
 
 #%%
-xg_clf.save_model(f"Model/signal_td_balanced_oversampling_treedepth_{max_depth}_eta_0.1_state_6.model")
+xg_clf.save_model(f"Model/signal_td_balanced_oversampling_noq2_treedepth_{max_depth}_eta_0.1_state_6.model")
 
 # bst = xgb.XGBClassifier()
 # bst.load_model("Model/signal_td_balanced_oversampling_treedepth_12_eta_0.1_state_6.model")
@@ -100,7 +100,7 @@ disp_train = ConfusionMatrixDisplay.from_estimator(
         normalize="true",
     )
 plt.title(f"Training Dataset, Depth = {max_depth}")
-plt.savefig(f"Output/confusion_training_XGB_filter_signal_td_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+plt.savefig(f"Output/confusion_training_XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.png", dpi=1000)
 plt.show()
 
 disp_validate = ConfusionMatrixDisplay.from_estimator(
@@ -112,20 +112,25 @@ disp_validate = ConfusionMatrixDisplay.from_estimator(
         normalize="true",
     )
 plt.title(f"Validation Dataset, Depth = {max_depth}")
-plt.savefig(f"Output/confusion_validation_XGB_filter_signal_td_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+plt.savefig(f"Output/confusion_validation_XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.png", dpi=1000)
 plt.show()
 
 #%%
-fig, ax = plt.subplots(nrows = 1, ncols = 1, figsize = (10,10))
-xgb.plot_importance(xg_clf, ax=ax, max_num_features=20, grid=False, height=0.3, title=f"Feature Importance, Depth = {max_depth}")
-plt.savefig(f"Output/importance_XGB_filter_signal_td_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+# xg_clf = xgb.XGBClassifier()
+# xg_clf.load_model("Model/signal_td_balanced_oversampling_noq2_treedepth_15_eta_0.1_state_6.model")
+
+fig, ax = plt.subplots(nrows = 1, ncols = 1, figsize = (23,15))
+# xgb.plot_importance(xg_clf, ax=ax, max_num_features=20, grid=False, height=0.3, title=f"Feature Importance, Depth = {max_depth}")
+xgb.plot_importance(xg_clf, ax=ax, max_num_features=20, grid=False, height=0.3, title=f"Feature Importance, Depth = 15")
+# plt.savefig(f"Output/importance_XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+# plt.savefig("Output/importance_XGB_filter_signal_td_noq2_depth_15_equal_oversampling2.png", dpi=1000)
 plt.show()
 
 #%%
 df_clf_filtered_xgb = df_test_xgb.loc[xg_clf.predict(df_test_xgb), :]
 df_clf_filtered = df_test.loc[df_clf_filtered_xgb.index, :]
 
-df_clf_filtered.to_pickle(f"Output_Data/XGB_filter_signal_td_depth_{max_depth}_equal_oversampling.pkl")
+df_clf_filtered.to_pickle(f"Output_Data/XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.pkl")
 #%%
 plt.hist(df_test["B0_MM"], bins=100, label="Manual Cuts only")
 plt.hist(df_clf_filtered["B0_MM"], bins=100, label="XG Boosted Decision Tree")
@@ -133,7 +138,7 @@ plt.xlabel("B0 mass / MeV")
 plt.ylabel("Number of Candidates")
 plt.legend()
 plt.title(f"signal.pkl + td, Oversampling Background, B0_P, Max Depth = {max_depth}")
-plt.savefig(f"Output/B0mm_XGB_filter_signal_td_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+plt.savefig(f"Output/B0mm_XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.png", dpi=1000)
 plt.show()
 #%%
 plt.hist(df_clf_filtered["B0_MM"], bins=100, label="XG Boosted Decision Tree", density=True)
@@ -143,21 +148,21 @@ plt.xlabel("B0 mass / MeV")
 plt.ylabel("Number of Candidates")
 plt.legend()
 plt.title(f"signal.pkl + td, Oversampling Background, B0_P, Max Depth = {max_depth}")
-plt.savefig(f"Output/B0mm_normalised_XGB_filter_signal_td_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+plt.savefig(f"Output/B0mm_normalised_XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.png", dpi=1000)
 plt.show()
 #%%
 plt.title(f"signal.pkl + td, Oversampling Background, B0_P, Max Depth = {max_depth}")
 plt.hist(df_clf_filtered["costhetal"], bins=50)
 plt.xlabel(r"$cos(\theta_l)$")
 plt.ylabel("Number of Candidates")
-plt.savefig(f"Output/costhetal_XGB_filter_signal_td_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+plt.savefig(f"Output/costhetal_XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.png", dpi=1000)
 plt.show()
 #%%
 plt.title(f"signal.pkl + td, Oversampling Background, B0_P, Max Depth = {max_depth}")
 plt.hist(df_clf_filtered["costhetak"], bins=50)
 plt.xlabel(r"$cos(\theta_k)$")
 plt.ylabel("Number of Candidates")
-plt.savefig(f"Output/costhetak_XGB_filter_signal_td_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+plt.savefig(f"Output/costhetak_XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.png", dpi=1000)
 plt.show()
 #%%
 training_loss = xg_clf.evals_result()["validation_0"]["logloss"]
@@ -217,7 +222,7 @@ for i, ax in enumerate(axs.flat):
 
     #ax.set_ylim(0, 150)
 
-plt.savefig(f"Output/B0mm_q2bins_XGB_filter_signal_td_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+plt.savefig(f"Output/B0mm_q2bins_XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.png", dpi=1000)
 plt.show()
 #%%
 # fit_params = {
