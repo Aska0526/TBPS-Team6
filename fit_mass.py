@@ -227,3 +227,26 @@ plt.legend()
 # m.migrad()
 # param = m.values
 # plt.plot(x, legendre_series(param, x))
+
+
+################### try to distingusish backgorund angular events ##################
+#%% find indices of bckgrnd and signal events
+# here I propose that if signal > 5% of background, then it is a signal event
+# will discuss this criterion later
+###########        gauss = gaussian(x,*popt_gauss)      #the popt here is from the popt of the combined function from curve_fit
+###########        bckgrd_ = bckgrd(x,*popt_bckgrd)     #x here is the bin edges array but excluding the last elemnt
+###########        quotient = gauss/bckgrd_
+###########        bin_num = []                         # get the indices of the correct bin
+###########        for i in quotient:
+###########            if i > 0.05:
+###########                bin_num_i, = np.where(quotient == i)
+###########                bin_num.append(bin_num_i[0])
+###########        
+###########        lower, upper = edges[bin_num[0]], edges[bin_num[-1]] # the two boundaries for signal event, edges is bin edges array
+###########            
+###########        angular_bckgrd = []
+###########        for i in range(len(df)):
+###########            if B_mass[i] > upper or B_mass[i] < lower: #then it is a background
+###########                angular_bckgrd.append(df['costhetal'][i])   #B_mass is from df['B0_MM']
+###########        
+###########        angular_bckgrd = pd.DataFrame(angular_bckgrd,columns=['ctl'])
