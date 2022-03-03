@@ -4,7 +4,7 @@ import pandas as pd
 from scipy.optimize import curve_fit
 from iminuit import Minuit
 from scipy.integrate import trapezoid
-
+from pathlib import Path
 
 def bckgrd(x, a, b, mu_exp):
     """
@@ -73,7 +73,7 @@ def d2gamma_p_d2q2_dcostheta(fl, afb, cos_theta_l, bn):
     ctl = np.array(cos_theta_l)
     c2tl = 2 * ctl ** 2 - 1
     array = 3 / 8 * (3 / 2 - 1 / 2 * fl + 1 / 2 * c2tl * (1 - 3 * fl) + 8 / 3 * afb * ctl)
-    array *= poly(array, *cof_mt[bn])
+    array *= poly(ctl, *cof_mt[bn])
     normalised_array = array
     return normalised_array
 
@@ -86,7 +86,7 @@ def log_likelihood(fl, afb, _bin):
 
 #%%
 # Reads the total dataset and apply some manual cuts
-ds = pd.read_pickle(r'year3-problem-solving\total_dataset.pkl')
+ds = pd.read_pickle(Path(r'year3-problem-solving/signal.pkl'))
 # choose candidates with one muon PT > 1.7GeV
 PT_mu_filter = (ds['mu_minus_PT'] >= 1.7 * (10 ** 3)) | (ds['mu_plus_PT'] >= 1.7 * (10 ** 3))
 
@@ -126,8 +126,8 @@ pi_to_be_p_filter = ds["Pi_MC15TuneV1_ProbNNp"] < 0.9
 #Applying filters (you can remove any filter to play around with them)
 ds_filtered = ds[
     end_vertex_chi2_filter
-    & daughter_IP_chi2_filter
-    & flight_distance_B0_filter
+    # & daughter_IP_chi2_filter
+    # & flight_distance_B0_filter
     & DIRA_angle_filter
     & Jpsi_filter
     & psi2S_filter
@@ -154,7 +154,7 @@ plt.show()
 
 #%%
 # Fits the acceptance dataset with 6th order poly
-amc = pd.read_pickle(r'year3-problem-solving\acceptance_mc.pkl')
+amc = pd.read_pickle(Path(r'year3-problem-solving/acceptance_mc.pkl'))
 
 cof_mt = []
 norm_lis = []
