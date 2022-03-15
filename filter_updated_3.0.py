@@ -16,14 +16,15 @@ os.chdir()
 
 
 
-
-
 def filters(df):
     '''find acceptance function'''
        #arxiv:1112.3515v3
-    PT_mu_filter = df['mu_minus_PT'] >= 1.5*(10**3)
+    PT_mu_filter = (df['mu_minus_PT']>= 1.5*(10**3)) |(df['mu_plus_PT']>= 1.5*(10**3) )
+
+    
     # DOI:10.1007/JHEP10(2018)047
-    PT_K_filter = (df['K_PT'] +df['Pi_PT'])>= 3*(10**3)
+    PT_K_filter = (df['K_PT'] >= 0.5*(10**3))
+    PT_pi_filter = (df['Pi_PT'] >= 0.5*(10**3))
     # Physics Letters B 753 (2016) 424–448
     PT_B0_filter =( df['mu_plus_PT']+df['mu_minus_PT']+df['K_PT']+df['Pi_PT']) >= 8*(10**3)
 # Selected B0_IPCHI2<9  (3 sigma) 
@@ -77,22 +78,46 @@ def filters(df):
     
        &PT_B0_filter
        &PT_mu_filter
+       #&PT_mup_filter
        &PT_K_filter
+       &PT_pi_filter
 
         
         #&PT_K_filter
-    & pi_to_be_K_filter
-    & K_to_be_pi_filter
-    & pi_to_be_p_filter
+   #& pi_to_be_K_filter
+    #& K_to_be_pi_filter
+   # & pi_to_be_p_filter
         ]
     
     return df_filtered
 
 
-
+def bin7(df):
+    Jpsi_filter = (df["q2"] <= 12.5) & (df["q2"] >= 11)
+    ds1=df[Jpsi_filter]
+    return ds1
 
 td= pd.read_pickle('total_dataset.pkl')
+
+
+td1= pd.read_pickle('signal.pkl')
+
+    
+def plots(df,namelist,title):
+    for i in namelist:
+        plt.hist(df[i],bins=10000,histtype=u'step',density=True)
+
+        plt.title(i+'  number left  '+ str(df.shape[0])+title)
+        #plt.hist(td[i],bins=1000,histtype=u'step',density=True)
+        plt.legend([i+' filtered','original td distribution'])
+        
+        plt.show()
+anglemass=['B0_MM','costhetal','costhetak','q2','phi']
+anglemass=['B0_MM','q2','mu_minus_PT','mu_minus_IPCHI2_OWNPV']
+#plots(td,anglemass,'td')
+#plots(td_filter30,anglemass,'td_filter30')
+
 tdf=filters(td)
-plt.hist(tdf.costhetal,bins=100)
-plt.show()
-plt.hist(tdf.B0_MM,bins=100)
+tds=filters(td1)
+b7=bin7(tdf)
+plots(tdf,anglemass,'td_filtered')
