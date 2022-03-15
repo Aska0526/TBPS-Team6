@@ -41,7 +41,7 @@ df_signal["B0_PZ"] = df_signal["mu_minus_PZ"] + df_signal["mu_plus_PZ"] + df_sig
 df_signal["B0_PE"] = df_signal["mu_minus_PE"] + df_signal["mu_plus_PE"] + df_signal["K_PE"] + df_signal["Pi_PE"]
 
 #%%
-drop_columns = ["year", "B0_MM", "q2"]
+drop_columns = ["year", "B0_MM"]
 df_test_xgb = df_test.drop(columns=drop_columns)
 #%%
 mass_filter = df_total['B0_MM'] >= 5350
@@ -117,13 +117,15 @@ plt.show()
 
 #%%
 # xg_clf = xgb.XGBClassifier()
-# xg_clf.load_model("Model/signal_td_balanced_oversampling_noq2_treedepth_15_eta_0.1_state_6.model")
+# xg_clf.load_model("Model/signal_td_balanced_oversampling_treedepth_15_eta_0.1_state_6.model")
+
+# xg_clf.get_booster().feature_names = list(x_train.columns)
 
 fig, ax = plt.subplots(nrows = 1, ncols = 1, figsize = (23,15))
-# xgb.plot_importance(xg_clf, ax=ax, max_num_features=20, grid=False, height=0.3, title=f"Feature Importance, Depth = {max_depth}")
-xgb.plot_importance(xg_clf, ax=ax, max_num_features=20, grid=False, height=0.3, title=f"Feature Importance, Depth = 15")
-# plt.savefig(f"Output/importance_XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.png", dpi=1000)
-# plt.savefig("Output/importance_XGB_filter_signal_td_noq2_depth_15_equal_oversampling2.png", dpi=1000)
+xgb.plot_importance(xg_clf, ax=ax, max_num_features=20, grid=False, height=0.3, title=f"Feature Importance, Depth = {max_depth}")
+# xgb.plot_importance(xg_clf, ax=ax, max_num_features=20, grid=False, height=0.3, title=f"Feature Importance, Depth = 15")
+plt.savefig(f"Output/importance_XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+# plt.savefig("Output/importance_XGB_filter_signal_td_depth_15_equal_oversampling2.png", dpi=1000)
 plt.show()
 
 #%%
