@@ -8,63 +8,65 @@ DATA_PATH = "Data/total_dataset.pkl"
 # DATA_PATH = "Data/signal.pkl"
 # DATA_PATH = "Data/acceptance_mc.pkl"
 
-ds = pd.read_pickle(DATA_PATH)
+df = pd.read_pickle(DATA_PATH)
 #%%
 # choose candidates with one muon PT > 1.7GeV
-PT_mu_filter = (ds['mu_minus_PT'] >= 1.7*(10**3)) | (ds['mu_plus_PT'] >= 1.7*(10**3))
+PT_mu_filter = (df['mu_minus_PT'] >= 1.5*(10**3)) | (df['mu_plus_PT'] >= 1.5*(10**3))
+
+# DOI:10.1007/JHEP10(2018)047
+PT_K_Pi_filter = (df['K_PT'] + df['Pi_PT']) >= 3 * (10 ** 3)
+
+# Physics Letters B 753 (2016) 424–448
+PT_B0_filter = (df['mu_plus_PT'] + df['mu_minus_PT'] + df['K_PT'] + df['Pi_PT']) >= 8 * (10 ** 3)
 
 # Selected B0_IPCHI2<9  (3 sigma) 
-IP_B0_filter = ds['B0_IPCHI2_OWNPV'] < 9
+IP_B0_filter = df['B0_IPCHI2_OWNPV'] < 9
+
+#arxiv:1112.3515v3
+Kstarmass = (df['Kstar_MM'] <= 992) & (df['Kstar_MM'] >= 792)
 
 # should be numerically similar to number of degrees of freedom for the decay (5) 
-end_vertex_chi2_filter = ds['B0_ENDVERTEX_CHI2'] < 6
+end_vertex_chi2_filter = df['B0_ENDVERTEX_CHI2'] < 10
 
-# At least one of the daughter particles should have IPCHI2>16 (4 sigma) 
-daughter_IP_chi2_filter = (ds['mu_minus_PT'] >= 16) | (ds['mu_plus_PT'] >= 16)
+# At least one of the daughter particles should have IPCHI2>16 (4 sigma)
+daughter_IP_chi2_filter = (df['mu_minus_IPCHI2_OWNPV'] >= 16) | (df['mu_plus_IPCHI2_OWNPV'] >= 16)
 
 # B0 should travel about 1cm (Less sure about this one - maybe add an upper limit?) 
-flight_distance_B0_filter = ds['B0_FD_OWNPV'] > 0.5*(10**1)
+flight_distance_B0_filter = (df['B0_FD_OWNPV'] <= 500) & (df['B0_FD_OWNPV'] >= 8)
 
 # cos(DIRA) should be close to 1
-DIRA_angle_filter = ds['B0_DIRA_OWNPV'] > 0.99999
+DIRA_angle_filter = df['B0_DIRA_OWNPV'] > 0.99999
 
 # Remove J/psi peaking background
-Jpsi_filter = (ds["q2"] <= 8) | (ds["q2"] >= 11)
+Jpsi_filter = (df["q2"] <= 8) | (df["q2"] >= 11)
 
 # Remove psi(2S) peaking background
-psi2S_filter = (ds["q2"] <= 12.5) | (ds["q2"] >= 15)
+psi2S_filter = (df["q2"] <= 12.5) | (df["q2"] >= 15)
 
 # Possible pollution from Bo -> K*0 psi(-> mu_plus mu_minus)
-phi_filter = (ds['q2'] <= 0.98) | (ds['q2'] >= 1.1)
-
-# Pion likely to be kaon
-pi_to_be_K_filter = ds["Pi_MC15TuneV1_ProbNNk"] < 0.95
-
-# Kaon likely to be pion
-K_to_be_pi_filter = ds["K_MC15TuneV1_ProbNNpi"] < 0.95
-
-# pion likely to be proton
-pi_to_be_p_filter = ds["Pi_MC15TuneV1_ProbNNp"] < 0.9
+phi_filter = (df['q2'] <= 0.98) | (df['q2'] >= 1.1)
 
 #%%
 #Applying filters (you can remove any filter to play around with them)
-ds_filtered = ds[
+df_filtered = df[
     end_vertex_chi2_filter
     & daughter_IP_chi2_filter
-    & flight_distance_B0_filter 
+    & flight_distance_B0_filter
     & DIRA_angle_filter
+    & Kstarmass
     & Jpsi_filter
     & psi2S_filter
     & phi_filter
-    # & pi_to_be_K_filter
-    # & K_to_be_pi_filter
-    # & pi_to_be_p_filter
+    & IP_B0_filter
+    & PT_B0_filter
+    & PT_mu_filter
+    & PT_K_Pi_filter
 ]
 
-ds_filtered.to_pickle(f"Output_Data/dataset_manual_filter_1.pkl")
+df_filtered.to_pickle(f"Output_Data/dataset_manual_filter_2.pkl")
 
 #%%
-plt.hist(ds_filtered["B0_MM"], bins=100)
+plt.hist(df_filtered["B0_MM"], bins=100)
 plt.xlabel("B0 mass / MeV")
 plt.ylabel("Number of Candidates")
 plt.title(f"Filtered")
@@ -72,7 +74,7 @@ plt.title(f"Filtered")
 # plt.savefig(f"Output/B0mm_filtered_manual_1_acceptance_mc.png", dpi=1000)
 plt.show()
 #%%
-plt.hist(ds["B0_MM"], bins=100)
+plt.hist(df["B0_MM"], bins=100)
 plt.xlabel("B0 mass / MeV")
 plt.ylabel("Number of Candidates")
 plt.title(f"Unfiltered")
@@ -80,7 +82,7 @@ plt.title(f"Unfiltered")
 # plt.savefig(f"Output/B0mm_unfiltered_acceptance_mc.png", dpi=1000)
 plt.show()
 #%%
-plt.hist(ds_filtered["costhetal"], bins=100)
+plt.hist(df_filtered["costhetal"], bins=100)
 plt.xlabel(r"$cos(\theta_l)$")
 plt.ylabel("Number of Candidates")
 plt.title(f"Filtered")
@@ -88,7 +90,7 @@ plt.title(f"Filtered")
 # plt.savefig(f"Output/costhetal_filtered_manual_1_acceptance_mc.png", dpi=1000)
 plt.show()
 #%%
-plt.hist(ds["costhetal"], bins=100)
+plt.hist(df["costhetal"], bins=100)
 plt.xlabel(r"$cos(\theta_l)$")
 plt.ylabel("Number of Candidates")
 plt.title(f"Unfiltered")
@@ -96,7 +98,7 @@ plt.title(f"Unfiltered")
 # plt.savefig(f"Output/costhetal_unfiltered_acceptance_mc.png", dpi=1000)
 plt.show()
 #%%
-plt.hist(ds_filtered["costhetak"], bins=100)
+plt.hist(df_filtered["costhetak"], bins=100)
 plt.xlabel(r"$cos(\theta_k)$")
 plt.ylabel("Number of Candidates")
 plt.title(f"Filtered")
@@ -105,7 +107,7 @@ plt.title(f"Filtered")
 plt.show()
 
 #%%
-plt.hist(ds["costhetak"], bins=100)
+plt.hist(df["costhetak"], bins=100)
 plt.xlabel(r"$cos(\theta_k)$")
 plt.ylabel("Number of Candidates")
 plt.title(f"Unfiltered")
