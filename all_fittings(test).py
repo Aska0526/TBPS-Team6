@@ -74,12 +74,16 @@ def d2gamma_p_d2q2_dcostheta(fl, afb, cos_theta_l, bn):
     ctl = np.array(cos_theta_l)
     c2tl = 2 * (ctl ** 2) - 1
     array = (3 / 8) * ((3 / 2) - (fl * 1 / 2) + (c2tl * 1 / 2) * (1 - 3 * fl) + (8 / 3) * afb * ctl)
-    if np.min(array) < 0.0:
-        array = array - (np.min(array) - (np.ones(len(array)) * 10**-14))
+    if np.min(array) <= 0.0:
+        # del_index = np.where(array <= 0.0)  # Method 1 (delete invalid ones)
+        # array = np.delete(array, del_index)
+        # ctl = np.delete(ctl, del_index)
+        array = array - (np.min(array))  # Method 2 (shift up)
+        # array = abs(array)  # Method 3 (take absolute)
     A0 = trapezoid(array, ctl)
-    # array *= 1 / poly(ctl, *cof_mt[bn])
+    array *= poly(ctl, *cof_mt[bn])
     A1 = trapezoid(array, ctl)
-    normalised_array = array
+    normalised_array = A0 * array / A1
     return normalised_array
 
 
@@ -96,7 +100,7 @@ fl_val_theo = [0.296, 0.76, 0.796, 0.711, 0.607, 0.348, 0.328, 0.435, 0.748, 0.3
 fl_err_theo = [0.05, 0.04, 0.03, 0.05, 0.05, 0.04, 0.03, 0.04, 0.04, 0.02]
 #%%
 # Reads the total dataset and apply some manual cuts
-ds = pd.read_pickle(Path(r'year3-problem-solving/signal.pkl'))
+ds = pd.read_pickle(Path(r'year3-problem-solving/XGB_filter_signal_td_depth_9_equal_oversampling.pkl'))
 # choose candidates with one muon PT > 1.7GeV
 PT_mu_filter = (ds['mu_minus_PT'] >= 1.7 * (10 ** 3)) | (ds['mu_plus_PT'] >= 1.7 * (10 ** 3))
 
@@ -134,18 +138,19 @@ K_to_be_pi_filter = ds["K_MC15TuneV1_ProbNNpi"] < 0.95
 pi_to_be_p_filter = ds["Pi_MC15TuneV1_ProbNNp"] < 0.9
 
 #Applying filters (you can remove any filter to play around with them)
-ds_filtered = ds
-    # end_vertex_chi2_filter
+ds_filtered = ds[
+    Jpsi_filter
+    & psi2S_filter
+    # & end_vertex_chi2_filter
     # & daughter_IP_chi2_filter
     # & flight_distance_B0_filter
     # & DIRA_angle_filter
-    # & Jpsi_filter
-    # & psi2S_filter
+
     # & phi_filter
     #& pi_to_be_K_filter
     #& K_to_be_pi_filter
     #& pi_to_be_p_filter
-
+]
 
 #%%
 # Fits and plots B0_MM distribution
@@ -213,17 +218,17 @@ for bn in range(10):
 
 bins = []
 for i in range(10):
-    bins.append(bin_num(ds_filtered, i)['costhetal'].transpose().to_numpy())
+    bins.append(sorted(bin_num(ds_filtered, i)['costhetal'].transpose().to_numpy()))
 
 bin_number_to_check = 4  # bin that we want to check in more details
 bin_results_to_check = None
 
 log_likelihood.errordef = Minuit.LIKELIHOOD
 decimal_places = 3
-starting_point = [-0.1, 0.0]
+starting_point = [0.3, 0.5]  # 0.3, 0.5 best for signal
 chi_fl, chi_afb = [], []
 
-xx, yy = np.meshgrid(np.linspace(-1.0, 1.0, 10), np.linspace(-1.0, 1.0, 10))
+# xx, yy = np.meshgrid(np.linspace(-1.0, 1.0, 10), np.linspace(-1.0, 1.0, 10))
 
 # for a in xx[0, :]:
 #     for f in yy[:, 0]:
@@ -240,14 +245,14 @@ for i in range(10):
         bin_results_to_check = m
     fls.append(m.values[0])
     afbs.append(m.values[1])
-    dummy_fl.append((fls[i] - fl_val_theo[i]) ** 2)
-    dummy_afb.append((afbs[i] - afb_val_theo[i]) ** 2)
+    # dummy_fl.append((fls[i] - fl_val_theo[i]) ** 2)
+    # dummy_afb.append((afbs[i] - afb_val_theo[i]) ** 2)
     fl_errs.append(m.errors[0])
     afb_errs.append(m.errors[1])
     print(f"Bin {i}: {np.round(fls[i], decimal_places)} +/- {np.round(fl_errs[i], decimal_places)},",
-          f"{np.round(afbs[i], decimal_places)} +/- {np.round(afb_errs[i], decimal_places)}.   valid?: {m.fmin.is_valid}")
-    #     chi_fl.append(np.sum(dummy_fl))
-    #     chi_afb.append(np.sum(dummy_afb))
+          f"{np.round(afbs[i], decimal_places)} +/- {np.round(afb_errs[i], decimal_places)}. valid?: {m.fmin.is_valid}")
+        # chi_fl.append(np.sum(dummy_fl))
+        # chi_afb.append(np.sum(dummy_afb))
 #%% check afb and fl
 # =============================================================================
 # plt.figure(figsize=(8, 5))
@@ -293,6 +298,7 @@ plt.show()
 # plt.tight_layout()
 # plt.show()
 
+
 # Plots theoretical values
 plt.subplots(figsize=(10, 5))
 plt.subplot(1, 2, 1)
@@ -327,6 +333,9 @@ ax.plot(xx.reshape(-1), yy.reshape(-1), 'kx', zdir='z', markersize=1)
 
 
 #%%
+'''
+NOT COMPLETE    
+'''
 fl = np.linspace(-1.0, 1.0, 5)
 afb = np.linspace(-1.0, 1.0, 5)
 xx, yy = np.meshgrid(afb, fl)
