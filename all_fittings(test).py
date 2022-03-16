@@ -101,7 +101,7 @@ fl_val_theo = [0.296, 0.76, 0.796, 0.711, 0.607, 0.348, 0.328, 0.435, 0.748, 0.3
 fl_err_theo = [0.05, 0.04, 0.03, 0.05, 0.05, 0.04, 0.03, 0.04, 0.04, 0.02]
 #%%
 # Reads the total dataset and apply some manual cuts
-ds = pd.read_pickle(Path(r'year3-problem-solving/XGB_filter_signal_td_depth_15_equal_oversampling.pkl'))
+ds = pd.read_pickle(Path(r'year3-problem-solving/XGB_filter_signal_td_totaldataset_depth_12_equal_oversampling.pkl'))
 # choose candidates with one muon PT > 1.7GeV
 PT_mu_filter = (ds['mu_minus_PT'] >= 1.7 * (10 ** 3)) | (ds['mu_plus_PT'] >= 1.7 * (10 ** 3))
 
@@ -139,9 +139,9 @@ K_to_be_pi_filter = ds["K_MC15TuneV1_ProbNNpi"] < 0.95
 pi_to_be_p_filter = ds["Pi_MC15TuneV1_ProbNNp"] < 0.9
 
 #Applying filters (you can remove any filter to play around with them)
-ds_filtered = ds[
-    Jpsi_filter
-    & psi2S_filter
+ds_filtered = ds
+    # Jpsi_filter
+    # & psi2S_filter
     # & end_vertex_chi2_filter
     # & daughter_IP_chi2_filter
     # & flight_distance_B0_filter
@@ -151,7 +151,6 @@ ds_filtered = ds[
     #& pi_to_be_K_filter
     #& K_to_be_pi_filter
     #& pi_to_be_p_filter
-    ]
 
 #%%
 # Fits and plots B0_MM distribution
@@ -170,7 +169,7 @@ plt.show()
 
 #%%
 # Fits the acceptance dataset with 6th order poly
-amc = pd.read_pickle(Path(r'year3-problem-solving/XGB_filter_signal_acceptancemc_depth_15_equal_oversampling.pkl'))
+amc = pd.read_pickle(Path(r'year3-problem-solving/XGB_filter_signal_td_acceptancemc_depth_12_equal_oversampling.pkl'))
 
 cof_mt = []
 
@@ -238,7 +237,7 @@ bin_results_to_check = None
 
 log_likelihood.errordef = Minuit.LIKELIHOOD
 decimal_places = 3
-starting_point = [0.8, 0.1]
+starting_point = [0.6, 0.3]
 chi_fl, chi_afb = [], []
 
 xx, yy = np.meshgrid(np.linspace(-1.0, 1.0, 10), np.linspace(0.0, 1.0, 10))
