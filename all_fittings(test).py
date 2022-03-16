@@ -62,13 +62,13 @@ def bin_num(dataset, num):
         return dataset
 
 
-def poly(x, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12):  # doesnt get much better after order 6
+def poly(x, a0, a1, a2, a3, a4, a5, a6):  # doesnt get much better after order 6
     """
     set the jth coeff of the power series by aj
     has to do it this way since curve_fit unpacks p0 automatically
     np.polynomial.Polynomial sets up the power series in ascending order
     """
-    return np.polynomial.Polynomial([a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12])(x)
+    return np.polynomial.Polynomial([a0, a1, a2, a3, a4, a5, a6])(x)
 
 
 def d2gamma_p_d2q2_dcostheta(fl, afb, cos_theta_l, bn):
@@ -76,11 +76,11 @@ def d2gamma_p_d2q2_dcostheta(fl, afb, cos_theta_l, bn):
     c2tl = 2 * (ctl ** 2) - 1
     array = (3 / 8) * ((3 / 2) - (fl * 1 / 2) + (c2tl * 1 / 2) * (1 - 3 * fl) + (8 / 3) * afb * ctl)
     # if np.min(array) <= 0.0:
-        # del_index = np.where(array <= 0.0)  # Method 1 (delete invalid ones)
-        # array = np.delete(array, del_index)
-        # ctl = np.delete(ctl, del_index)
-        # array = array - (np.min(array))  # Method 2 (shift up)
-        # array = abs(array)  # Method 3 (take absolute)
+    # del_index = np.where(array <= 0.0)  # Method 1 (delete invalid ones)
+    # array = np.delete(array, del_index)
+    # ctl = np.delete(ctl, del_index)
+    # array = array - (np.min(array))  # Method 2 (shift up)
+    # array = abs(array)  # Method 3 (take absolute)
     A0 = trapezoid(array, ctl)
     array *= poly(ctl, *cof_mt[bn])
     A1 = trapezoid(array, ctl)
@@ -101,61 +101,64 @@ fl_val_theo = [0.296, 0.76, 0.796, 0.711, 0.607, 0.348, 0.328, 0.435, 0.748, 0.3
 fl_err_theo = [0.05, 0.04, 0.03, 0.05, 0.05, 0.04, 0.03, 0.04, 0.04, 0.02]
 #%%
 # Reads the total dataset and apply some manual cuts
-ds = pd.read_pickle(Path(r'year3-problem-solving/XGB_filter_signal_td_totaldataset_depth_12_equal_oversampling.pkl'))
+df = pd.read_pickle(Path(r'year3-problem-solving/total_dataset.pkl'))
 # choose candidates with one muon PT > 1.7GeV
-PT_mu_filter = (ds['mu_minus_PT'] >= 1.7 * (10 ** 3)) | (ds['mu_plus_PT'] >= 1.7 * (10 ** 3))
+PT_mu_filter = (df['mu_minus_PT'] >= 1.5 * (10 ** 3)) | (df['mu_plus_PT'] >= 1.5 * (10 ** 3))
+
+# DOI:10.1007/JHEP10(2018)047
+PT_K_filter = (df['K_PT'] >= 0.5 * (10 ** 3))
+
+PT_Pi_filter = (df['Pi_PT'] >= 0.5 * (10 ** 3))
 
 # Selected B0_IPCHI2<9  (3 sigma)
-IP_B0_filter = ds['B0_IPCHI2_OWNPV'] < 9
+IP_B0_filter = df['B0_IPCHI2_OWNPV'] < 9
+
+#arxiv:1112.3515v3
+Kstarmass = (df['Kstar_MM'] <= 992) & (df['Kstar_MM'] >= 792)
 
 # should be numerically similar to number of degrees of freedom for the decay (5)
-end_vertex_chi2_filter = ds['B0_ENDVERTEX_CHI2'] < 6
+# Physics Letters B 753 (2016) 424–448
+# a track fit  per degree of freedom less than 1.8,
+end_vertex_chi2_filter = df['B0_ENDVERTEX_CHI2'] < 10
 
 # At least one of the daughter particles should have IPCHI2>16 (4 sigma)
-daughter_IP_chi2_filter = (ds['mu_minus_PT'] >= 16) | (ds['mu_plus_PT'] >= 16)
+daughter_IP_chi2_filter = (df['mu_minus_IPCHI2_OWNPV'] >= 16) | (df['mu_plus_IPCHI2_OWNPV'] >= 16)
 
 # B0 should travel about 1cm (Less sure about this one - maybe add an upper limit?)
-flight_distance_B0_filter = ds['B0_FD_OWNPV'] > 0.5 * (10 ** 1)
+flight_distance_B0_filter = (df['B0_FD_OWNPV'] <= 500) & (df['B0_FD_OWNPV'] >= 8)
 
 # cos(DIRA) should be close to 1
-DIRA_angle_filter = ds['B0_DIRA_OWNPV'] > 0.99999
+# Physics Letters B 753 (2016) 424–448
+DIRA_angle_filter = df['B0_DIRA_OWNPV'] > 0.9994
 
 # Remove J/psi peaking background
-Jpsi_filter = (ds["q2"] <= 8) | (ds["q2"] >= 11)
+Jpsi_filter = (df["q2"] <= 8) | (df["q2"] >= 11)
 
 # Remove psi(2S) peaking background
-psi2S_filter = (ds["q2"] <= 12.5) | (ds["q2"] >= 15)
+psi2S_filter = (df["q2"] <= 12.5) | (df["q2"] >= 15)
 
 # Possible pollution from Bo -> K*0 psi(-> mu_plus mu_minus)
-phi_filter = (ds['q2'] <= 0.98) | (ds['q2'] >= 1.1)
+phi_filter = (df['q2'] <= 0.98) | (df['q2'] >= 1.1)
 
-# Pion likely to be kaon
-pi_to_be_K_filter = ds["Pi_MC15TuneV1_ProbNNk"] < 0.95
-
-# Kaon likely to be pion
-K_to_be_pi_filter = ds["K_MC15TuneV1_ProbNNpi"] < 0.95
-
-# pion likely to be proton
-pi_to_be_p_filter = ds["Pi_MC15TuneV1_ProbNNp"] < 0.9
-
-#Applying filters (you can remove any filter to play around with them)
-ds_filtered = ds
-    # Jpsi_filter
-    # & psi2S_filter
+df_filtered = df[
+    Jpsi_filter
     # & end_vertex_chi2_filter
     # & daughter_IP_chi2_filter
     # & flight_distance_B0_filter
     # & DIRA_angle_filter
-
-    # & phi_filter
-    #& pi_to_be_K_filter
-    #& K_to_be_pi_filter
-    #& pi_to_be_p_filter
+    # & Kstarmass
+    & psi2S_filter
+    & phi_filter
+    # & IP_B0_filter
+    # & PT_mu_filter
+    # & PT_K_filter
+    # & PT_Pi_filter
+    ]
 
 #%%
 # Fits and plots B0_MM distribution
 
-B_mass = ds_filtered['B0_MM']
+B_mass = df_filtered['B0_MM']
 height, edges, _ = plt.hist(B_mass, bins=200, range=[5180, 5700], label='data')
 plt.xlabel(r'B0 mass $\left(\frac{MeV}{c^2}\right)$')
 plt.ylabel('Number')
@@ -168,18 +171,71 @@ plt.legend()
 plt.show()
 
 #%%
-# Fits the acceptance dataset with 6th order poly
-amc = pd.read_pickle(Path(r'year3-problem-solving/XGB_filter_signal_td_acceptancemc_depth_12_equal_oversampling.pkl'))
+# Loads and cuts amc
+amc = pd.read_pickle(Path(r'year3-problem-solving/acceptance_mc.pkl'))
+PT_mu_filter_amc = (amc['mu_minus_PT'] >= 1.5 * (10 ** 3)) | (amc['mu_plus_PT'] >= 1.5 * (10 ** 3))
 
+# DOI:10.1007/JHEP10(2018)047
+PT_K_filter_amc = (amc['K_PT'] >= 0.5 * (10 ** 3))
+
+PT_Pi_filter_amc = (amc['Pi_PT'] >= 0.5 * (10 ** 3))
+
+# Selected B0_IPCHI2<9  (3 sigma)
+IP_B0_filter_amc = amc['B0_IPCHI2_OWNPV'] < 9
+
+#arxiv:1112.3515v3
+Kstarmass_amc = (amc['Kstar_MM'] <= 992) & (amc['Kstar_MM'] >= 792)
+
+# should be numerically similar to number of degrees of freedom for the decay (5)
+# Physics Letters B 753 (2016) 424–448
+# a track fit  per degree of freedom less than 1.8,
+end_vertex_chi2_filter_amc = amc['B0_ENDVERTEX_CHI2'] < 10
+
+# At least one of the daughter particles should have IPCHI2>16 (4 sigma)
+daughter_IP_chi2_filter_amc = (amc['mu_minus_IPCHI2_OWNPV'] >= 16) | (amc['mu_plus_IPCHI2_OWNPV'] >= 16)
+
+# B0 should travel about 1cm (Less sure about this one - maybe add an upper limit?)
+flight_distance_B0_filter_amc = (amc['B0_FD_OWNPV'] <= 500) & (amc['B0_FD_OWNPV'] >= 8)
+
+# cos(DIRA) should be close to 1
+# Physics Letters B 753 (2016) 424–448
+DIRA_angle_filter_amc = amc['B0_DIRA_OWNPV'] > 0.9994
+
+# Remove J/psi peaking background
+Jpsi_filter_amc = (amc["q2"] <= 8) | (amc["q2"] >= 11)
+
+# Remove psi(2S) peaking background
+psi2S_filter_amc = (amc["q2"] <= 12.5) | (amc["q2"] >= 15)
+
+# Possible pollution from Bo -> K*0 psi(-> mu_plus mu_minus)
+phi_filter_amc = (amc['q2'] <= 0.98) | (amc['q2'] >= 1.1)
+
+amc_filtered = amc[
+    Jpsi_filter_amc
+    # & end_vertex_chi2_filter_amc
+    # & daughter_IP_chi2_filter_amc
+    # & flight_distance_B0_filter_amc
+    # & DIRA_angle_filter_amc
+    # & Kstarmass_amc
+    & psi2S_filter_amc
+    & phi_filter_amc
+    # & IP_B0_filter_amc
+    # & PT_mu_filter_amc
+    # & PT_K_filter_amc
+    # & PT_Pi_filter_amc
+    ]
+
+#%%
+# Fits the acceptance dataset with 6th order poly
 cof_mt = []
 
 # Do this for all 10 predefined bins
-order = 12
+order = 6
 for bn in range(10):
     plt.figure()
-    ctl = bin_num(amc, bn)['costhetal']
+    ctl = bin_num(amc_filtered, bn)['costhetal']
     heights, edges, _ = plt.hist(ctl, bins=70, density=True, histtype='step', label='Data')
-    plt.close()  # Comment out this if u want to see the histograms
+    # plt.close()  # Comment out this if u want to see the histograms
     x = np.array([(edges[i] + edges[i + 1]) / 2 for i in range(len(edges) - 1)])  # Finds centre of each HISTOGRAM bin
 
     x_array = np.array([[x[0] ** i for i in range(order + 1)],  # Defines the matrix for costhetal.
@@ -188,12 +244,12 @@ for bn in range(10):
                         [(x[int(len(edges) // -5)]) ** i for i in range(order + 1)],
                         [(x[int(len(edges) // -7)]) ** i for i in range(order + 1)],
                         [(x[int(len(edges) // -1.1)]) ** i for i in range(order + 1)],
-                        [(x[int(len(edges) // 4)]) ** i for i in range(order + 1)],
-                        [(x[int(len(edges) // 6)]) ** i for i in range(order + 1)],
-                        [(x[int(len(edges) // 9)]) ** i for i in range(order + 1)],
-                        [(x[int(len(edges) // -3)]) ** i for i in range(order + 1)],
-                        [(x[int(len(edges) // -9)]) ** i for i in range(order + 1)],
-                        [(x[int(len(edges) // -3.5)]) ** i for i in range(order + 1)],
+                        # [(x[int(len(edges) // 4)]) ** i for i in range(order + 1)],
+                        # [(x[int(len(edges) // 6)]) ** i for i in range(order + 1)],
+                        # [(x[int(len(edges) // 9)]) ** i for i in range(order + 1)],
+                        # [(x[int(len(edges) // -3)]) ** i for i in range(order + 1)],
+                        # [(x[int(len(edges) // -9)]) ** i for i in range(order + 1)],
+                        # [(x[int(len(edges) // -3.5)]) ** i for i in range(order + 1)],
                         [x[-1] ** i for i in range(order + 1)]])
 
     y_array = np.array([
@@ -203,12 +259,12 @@ for bn in range(10):
         [heights[int(len(edges) // -5)]],
         [heights[int(len(edges) // -7)]],
         [heights[int(len(edges) // -1.1)]],
-        [heights[int(len(edges) // 4)]],  # Comment out for appropriate order
-        [heights[int(len(edges) // 6)]],
-        [heights[int(len(edges) // 9)]],
-        [heights[int(len(edges) // -3)]],
-        [heights[int(len(edges) // -9)]],
-        [heights[int(len(edges) // -3.5)]],
+        # [heights[int(len(edges) // 4)]],  # Comment out for appropriate order
+        # [heights[int(len(edges) // 6)]],
+        # [heights[int(len(edges) // 9)]],
+        # [heights[int(len(edges) // -3)]],
+        # [heights[int(len(edges) // -9)]],
+        # [heights[int(len(edges) // -3.5)]],
         [heights[-1]]])
 
     coeffs = np.linalg.solve(x_array, y_array)[:, 0]  # Solves for the coeffs of the polynomial
@@ -217,27 +273,27 @@ for bn in range(10):
     cof_mt.append(coeffs / norm)
 
     # Uncomment if u want to inspect the fit
-    # plt.plot(x, poly(x, *coeffs), label='Fit')
-    # plt.plot(x, heights / poly(x, *coeffs), label=r'$\frac{Data}{Fit}$')
-    # plt.title(f'Acceptance bin{bn}')
-    # plt.xlabel(r'$cos(\theta_l)$')
-    # plt.ylabel('Number')
-    # plt.legend()
-    # plt.show()
+    plt.plot(x, poly(x, *coeffs), label='Fit')
+    plt.plot(x, heights / poly(x, *coeffs), label=r'$\frac{Data}{Fit}$')
+    plt.title(f'Acceptance bin{bn}')
+    plt.xlabel(r'$cos(\theta_l)$')
+    plt.ylabel('Number')
+    plt.legend()
+    plt.show()
 
 #%%
 # Performs iMinuit fit for Afb, FL
 
 bins = []
 for i in range(10):
-    bins.append(sorted(bin_num(ds_filtered, i)['costhetal'].transpose().to_numpy()))
+    bins.append(sorted(bin_num(df_filtered, i)['costhetal'].transpose().to_numpy()))
 
 bin_number_to_check = 4  # bin that we want to check in more details
 bin_results_to_check = None
 
 log_likelihood.errordef = Minuit.LIKELIHOOD
 decimal_places = 3
-starting_point = [0.6, 0.3]
+starting_point = [0.4, 0.3]
 chi_fl, chi_afb = [], []
 
 xx, yy = np.meshgrid(np.linspace(-1.0, 1.0, 10), np.linspace(0.0, 1.0, 10))
