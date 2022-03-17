@@ -4,6 +4,7 @@ import pandas as pd
 from scipy.optimize import curve_fit
 from iminuit import Minuit
 from scipy.integrate import trapezoid
+from scipy.stats import crystalball
 from pathlib import Path
 from mpl_toolkits import mplot3d
 
@@ -20,6 +21,24 @@ def gaussian(x, sigma, A, mu_gauss):
     The potential signal
     """
     return A * np.exp(-(x - mu_gauss) ** 2 / sigma ** 2)
+
+
+def two_crystalball(x, beta1, m1, loc1, scale1, amp1, beta2, m2, loc2, scale2, amp2):
+    fn1 = amp1 * crystalball.pdf(x, beta1, m1, loc1, scale1)
+    fn2 = amp2 * crystalball.pdf(x, beta2, m2, loc2, scale2)
+    return fn1 + fn2
+
+
+def one_crystalball(x, beta, m, loc, scale, amp):
+    return amp * crystalball.pdf(x, beta, m, loc, scale)
+
+
+def two_crystalball_w_bckgrd(x, beta1, m1, loc1, scale1, amp1, beta2, m2, loc2, scale2, amp2, a, b, mu_exp):
+    return two_crystalball(x, beta1, m1, loc1, scale1, amp1, beta2, m2, loc2, scale2, amp2) + bckgrd(x, a, b, mu_exp)
+
+
+def one_crystalball_w_bckgrd(x, beta, m, loc, scale, amp, a, b, mu_exp):
+    return one_crystalball(x, beta, m ,loc, scale, amp) + bckgrd(x, a,b ,mu_exp)
 
 
 def combined(x, a, b, mu_exp, sigma, A, mu_gauss):
@@ -101,7 +120,8 @@ fl_val_theo = [0.296, 0.76, 0.796, 0.711, 0.607, 0.348, 0.328, 0.435, 0.748, 0.3
 fl_err_theo = [0.05, 0.04, 0.03, 0.05, 0.05, 0.04, 0.03, 0.04, 0.04, 0.02]
 #%%
 # Reads the total dataset and apply some manual cuts
-df = pd.read_pickle(Path(r'year3-problem-solving/total_dataset.pkl'))
+df = pd.read_pickle(
+    Path(r'year3-problem-solving/XGB_filter_signal_td_reconstruction_totaldataset_depth_12_equal_oversampling.pkl'))
 # choose candidates with one muon PT > 1.7GeV
 PT_mu_filter = (df['mu_minus_PT'] >= 1.5 * (10 ** 3)) | (df['mu_plus_PT'] >= 1.5 * (10 ** 3))
 
@@ -140,35 +160,47 @@ psi2S_filter = (df["q2"] <= 12.5) | (df["q2"] >= 15)
 # Possible pollution from Bo -> K*0 psi(-> mu_plus mu_minus)
 phi_filter = (df['q2'] <= 0.98) | (df['q2'] >= 1.1)
 
-df_filtered = df[
-    Jpsi_filter
-    # & end_vertex_chi2_filter
-    # & daughter_IP_chi2_filter
-    # & flight_distance_B0_filter
-    # & DIRA_angle_filter
-    # & Kstarmass
-    & psi2S_filter
-    & phi_filter
-    # & IP_B0_filter
-    # & PT_mu_filter
-    # & PT_K_filter
-    # & PT_Pi_filter
-    ]
+df_filtered = df
+# Jpsi_filter
+# & end_vertex_chi2_filter  # Removes 37463
+# & daughter_IP_chi2_filter  # 36
+# & flight_distance_B0_filter  # 8832
+# & DIRA_angle_filter  # 0
+# & Kstarmass  # 3878
+# & psi2S_filter
+# & phi_filter
+# & IP_B0_filter  # 526
+# & PT_mu_filter  # 42
+# & PT_K_filter  # 905
+# & PT_Pi_filter  # 634
 
 #%%
 # Fits and plots B0_MM distribution
-
 B_mass = df_filtered['B0_MM']
-height, edges, _ = plt.hist(B_mass, bins=200, range=[5180, 5700], label='data')
+manual_only = pd.read_pickle(Path('year3-problem-solving/dataset_manual_filter_3.pkl'))['B0_MM']
+height, edges = np.histogram(manual_only, bins=100, range=[5170, 5700])
+x = np.array([(edges[i] + edges[i + 1]) / 2 for i in range(len(edges) - 1)])
+plt.errorbar(x, height, yerr=np.sqrt(height), fmt='k.', label='data', markersize=4)
 plt.xlabel(r'B0 mass $\left(\frac{MeV}{c^2}\right)$')
 plt.ylabel('Number')
 
-p0 = [2100, 0.0003, 5180, 50, 2000, 5300]
-x = np.array([(edges[i] + edges[i + 1]) / 2 for i in range(len(edges) - 1)])
-popt, cov = curve_fit(combined, x, height, p0=p0)
-plt.plot(x, combined(x, *popt), label='Fit')
+# Gaussian + exponential fit
+# p0 = [2100, 0.0003, 5180, 50, 2000, 5300]
+# popt, cov = curve_fit(combined, x, height, p0=p0)
+# plt.plot(x, combined(x, *popt), label='Fit')
+# plt.show()
+
+# Crystalball fit
+guess = [5280, 4, 5290, 30, 8000, 5270, 4, 5270, 30, 10000, 40, 0.007, 5160]
+# guess = [5260, 2, 5280, 30, 16000, 30, 0.009, 5200]
+popt, pcov = curve_fit(two_crystalball_w_bckgrd, x, height, p0=guess, method='dogbox')
+# plt.plot(x, two_crystalball(x, *popt[:10]), label='Signal')
+# plt.plot(x, bckgrd(x, *popt[10:]), 'r', label='Combinatorial background')
+# plt.fill_between(x, bckgrd(x, *popt[10:]), hatch='\\\\', facecolor='none', edgecolor='r')
+plt.plot(x, bckgrd(x, *guess[10:]))
+plt.plot(x, two_crystalball(x, *guess[:10]), '--')
+plt.plot(x, two_crystalball_w_bckgrd(x, *guess))
 plt.legend()
-plt.show()
 
 #%%
 # Loads and cuts amc
@@ -212,17 +244,17 @@ phi_filter_amc = (amc['q2'] <= 0.98) | (amc['q2'] >= 1.1)
 
 amc_filtered = amc[
     Jpsi_filter_amc
-    # & end_vertex_chi2_filter_amc
-    # & daughter_IP_chi2_filter_amc
-    # & flight_distance_B0_filter_amc
-    # & DIRA_angle_filter_amc
-    # & Kstarmass_amc
+    & end_vertex_chi2_filter_amc
+    & daughter_IP_chi2_filter_amc
+    & flight_distance_B0_filter_amc
+    & DIRA_angle_filter_amc
+    & Kstarmass_amc
     & psi2S_filter_amc
     & phi_filter_amc
-    # & IP_B0_filter_amc
-    # & PT_mu_filter_amc
-    # & PT_K_filter_amc
-    # & PT_Pi_filter_amc
+    & IP_B0_filter_amc
+    & PT_mu_filter_amc
+    & PT_K_filter_amc
+    & PT_Pi_filter_amc
     ]
 
 #%%
@@ -232,10 +264,10 @@ cof_mt = []
 # Do this for all 10 predefined bins
 order = 6
 for bn in range(10):
-    plt.figure()
+    plt.figure(bn)
     ctl = bin_num(amc_filtered, bn)['costhetal']
     heights, edges, _ = plt.hist(ctl, bins=70, density=True, histtype='step', label='Data')
-    # plt.close()  # Comment out this if u want to see the histograms
+    plt.close()  # Comment out this if u want to see the histograms
     x = np.array([(edges[i] + edges[i + 1]) / 2 for i in range(len(edges) - 1)])  # Finds centre of each HISTOGRAM bin
 
     x_array = np.array([[x[0] ** i for i in range(order + 1)],  # Defines the matrix for costhetal.
@@ -273,13 +305,13 @@ for bn in range(10):
     cof_mt.append(coeffs / norm)
 
     # Uncomment if u want to inspect the fit
-    plt.plot(x, poly(x, *coeffs), label='Fit')
-    plt.plot(x, heights / poly(x, *coeffs), label=r'$\frac{Data}{Fit}$')
-    plt.title(f'Acceptance bin{bn}')
-    plt.xlabel(r'$cos(\theta_l)$')
-    plt.ylabel('Number')
-    plt.legend()
-    plt.show()
+    # plt.plot(x, poly(x, *coeffs), label='Fit')
+    # plt.plot(x, heights / poly(x, *coeffs), label=r'$\frac{Data}{Fit}$')
+    # plt.title(f'Acceptance bin{bn} ({order}'r'$^{th} order)$')
+    # plt.xlabel(r'$cos(\theta_l)$')
+    # plt.ylabel('Number')
+    # plt.legend()
+    # plt.show()
 
 #%%
 # Performs iMinuit fit for Afb, FL
@@ -293,7 +325,7 @@ bin_results_to_check = None
 
 log_likelihood.errordef = Minuit.LIKELIHOOD
 decimal_places = 3
-starting_point = [0.4, 0.3]
+starting_point = [0.6, 0.2]
 chi_fl, chi_afb = [], []
 
 xx, yy = np.meshgrid(np.linspace(-1.0, 1.0, 10), np.linspace(0.0, 1.0, 10))
@@ -371,9 +403,9 @@ for i in range(10):
 plt.subplots(figsize=(10, 5))
 plt.subplot(1, 2, 1)
 plt.errorbar(np.linspace(0, len(bins) - 1, len(bins)), fls, yerr=fl_errs, fmt='o', markersize=5, label=r'fit',
-             color='red')
+             color='red', capsize=2)
 plt.errorbar(np.linspace(0, len(bins) - 1, len(bins)), fl_val_theo, yerr=fl_err_theo, fmt='x', markersize=6,
-             label=r'prediction', color='blue')
+             label=r'prediction', color='blue', capsize=2)
 plt.grid()
 plt.legend()
 plt.ylabel(r'$F_L$')
@@ -381,9 +413,9 @@ plt.xlabel(r'Bin number')
 
 plt.subplot(1, 2, 2)
 plt.errorbar(np.linspace(0, len(bins) - 1, len(bins)), afbs, yerr=afb_errs, fmt='o', markersize=5, label=r'fit',
-             color='red')
+             color='red', capsize=2)
 plt.errorbar(np.linspace(0, len(bins) - 1, len(bins)), afb_val_theo, yerr=afb_err_theo, fmt='x', markersize=6,
-             label=r'prediction', color='blue')
+             label=r'prediction', color='blue', capsize=2)
 plt.grid()
 plt.legend()
 plt.ylabel(r'afb')
