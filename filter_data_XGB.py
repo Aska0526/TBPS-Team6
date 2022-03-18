@@ -54,22 +54,25 @@ phi_filter = (df['q2'] <= 0.98) | (df['q2'] >= 1.1)
 #%%
 #Applying filters (you can remove any filter to play around with them)
 df_filtered_manual = df[
-    end_vertex_chi2_filter
+    Jpsi_filter
+    & psi2S_filter
+    & phi_filter
+
+    & end_vertex_chi2_filter
     & daughter_IP_chi2_filter
     & flight_distance_B0_filter
     & DIRA_angle_filter
     & Kstarmass
-    & Jpsi_filter
-    & psi2S_filter
-    & phi_filter
+
     & IP_B0_filter
     & PT_mu_filter
     & PT_K_filter
     & PT_Pi_filter
 ]
 #%%
-# MODEL_PATH = "Model/signal_td_balanced_oversampling_noq2_treedepth_9_eta_0.1_state_6.model"
-MODEL_PATH = "Model/signal_td_balanced_oversampling_treedepth_15_eta_0.1_state_6.model"
+# MODEL_PATH = "Model/signal_td_balanced_oversampling_noq2_treedepth_12_eta_0.1_state_6.model"
+# MODEL_PATH = "Model/signal_td_balanced_oversampling_treedepth_12_eta_0.1_state_6.model"
+MODEL_PATH = "Model/signal_td_reconstruction_balanced_oversampling_treedepth_12_eta_0.1_state_6.model"
 bst = xgb.XGBClassifier()
 bst.load_model(MODEL_PATH)
 #%%
@@ -83,16 +86,127 @@ df_test_xgb = df_filtered_manual.drop(columns=drop_columns)
 df_clf_filtered_xgb = df_test_xgb.loc[bst.predict(df_test_xgb), :]
 df_clf_filtered = df_filtered_manual.loc[df_clf_filtered_xgb.index, :]
 
+print(len(df_clf_filtered) / len(df_filtered_manual))
+print(len(df_filtered_manual) / len(df))
+print(len(df_clf_filtered) / len(df))
+
 # df_clf_filtered.to_pickle(f"Output_Data/XGB_filter_signal_td_totaldataset_noq2_depth_9_equal_oversampling.pkl")
-df_clf_filtered.to_pickle(f"Output_Data/XGB_filter_signal_td_totaldataset_depth_15_equal_oversampling.pkl")
+# df_clf_filtered.to_pickle(f"Output_Data/XGB_filter_signal_td_totaldataset_3peakcuts_depth_12_equal_oversampling.pkl")
+# df_clf_filtered.to_pickle(f"Output_Data/XGB_filter_signal_td_reconstruction_acceptancemc_noflightdistanceB0_depth_12_equal_oversampling.pkl")
+
 
 #%%
 plt.hist(df_clf_filtered["B0_MM"], bins=100, label="XG Boosted Decision Tree", density=True)
-plt.hist(df["B0_MM"], bins=100, label="Manual Cuts only", density=True, alpha=0.5)
+# plt.hist(df["B0_MM"], bins=100, label="No Cuts", density=True, alpha=0.5)
+plt.hist(df_filtered_manual["B0_MM"], bins=100, label="Manual Cuts only", density=True, alpha=0.5)
 plt.xlabel("B0 mass / MeV")
 plt.ylabel("Number of Candidates")
 plt.title("Applying BDT to acceptance_mc")
 plt.legend()
+plt.show()
+#%%
+df_filtered_1 = df[
+    Jpsi_filter
+    & psi2S_filter
+    & phi_filter
+
+    & end_vertex_chi2_filter
+    & daughter_IP_chi2_filter
+    & flight_distance_B0_filter
+    & DIRA_angle_filter
+    & Kstarmass
+
+    & IP_B0_filter
+    & PT_mu_filter
+    & PT_K_filter
+    & PT_Pi_filter
+]
+
+df_filtered_2 = df[
+    Jpsi_filter
+    & psi2S_filter
+    & phi_filter
+
+    # & end_vertex_chi2_filter
+    # & daughter_IP_chi2_filter
+    # & flight_distance_B0_filter
+    # & DIRA_angle_filter
+    # & Kstarmass
+
+    # & IP_B0_filter
+    # & PT_mu_filter
+    # & PT_K_filter
+    # & PT_Pi_filter
+]
+
+plt.hist(df_filtered_2["q2"], bins=100, label="all cuts", density=True, alpha=0.5)
+plt.hist(df_filtered_1["q2"], bins=100, label="3 basic manual cuts", density=True, alpha=0.5)
+plt.hist(df_clf_filtered["q2"], bins=100, label="with ML", density=True, alpha=0.5)
+plt.xlabel("q2 / MeV")
+plt.ylabel("Number of Candidates")
+plt.xticks(np.arange(0,26))
+# plt.title("Applying BDT to acceptance_mc")
+plt.legend()
+# plt.savefig("Output/cuts_comparison_1.jpeg", dpi=1000)
+plt.show()
+#%%
+TEST_DATA_PATH = "Data/total_dataset.pkl"
+# df_test = pd.read_pickle(TEST_DATA_PATH)
+df_test = df_filtered_manual
+df_cut = df_clf_filtered
+
+bins_b = [0.1, 1.1, 2.5, 4, 6, 15, 17, 11, 1, 15]
+
+bins_t = [0.98, 2.5, 4, 6, 8, 17, 19, 12.5, 6, 17.9]
+
+q = [[],[],[],[],[],[], [],[],[],[]]
+
+d = [[],[],[],[],[],[], [],[],[],[]]
+
+df = [[],[],[],[],[],[], [],[],[],[]]
+
+ds = df_test
+
+# ds_filtered = df_clf_filtered
+ds_filtered = df_cut
+
+for i in range(len(bins_b)):
+
+    q[i] = (ds["q2"] >= bins_b[i]) & (ds["q2"] < bins_t[i])
+
+    d[i] = ds[q[i]]
+
+    df[i] = ds_filtered[q[i]]
+
+fig, axs = plt.subplots(nrows = 2, ncols = 5, figsize = (24,12))
+
+titles = [
+    r"$0.1 \leq q^2 < 0.98$ MeV",
+    r"$1.1 \leq q^2 < 2.5$ MeV",
+    r"$2.5 \leq q^2 < 4$ MeV",
+    r"$4 \leq q^2 < 6$ MeV",
+    r"$6 \leq q^2 < 8$ MeV",
+    r"$15 \leq q^2 < 17$ MeV",
+    r"$17 \leq q^2 < 19$ MeV",
+    r"$11 \leq q^2 < 12.5$ MeV",
+    r"$1 \leq q^2 < 6$ MeV",
+    r"$15 \leq q^2 < 17.9$ MeV",
+    ]
+
+for i, ax in enumerate(axs.flat):
+
+    ax.hist(d[i]["B0_MM"], bins=20)
+
+    ax.hist(df[i]["B0_MM"],bins = 20)
+
+    ax.title.set_text(titles[i])
+
+    ax.set_ylabel("Number of Candidates")
+
+    ax.set_xlabel("B0 mass / MeV")
+
+    #ax.set_ylim(0, 150)
+plt.savefig("Output/q2bins_XGB_signal_td_reconstruction_max_depth_12_oversampling.jpeg", dpi=1000)
 plt.show()
 #%%
 # plt.hist(df["q2"], bins=100, label="Manual Cuts only")
