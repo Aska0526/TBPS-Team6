@@ -118,7 +118,7 @@ xg_clf.fit(x_train, y_train, eval_set=[(x_train, y_train), (x_validate, y_valida
 # xg_clf.fit(x_train, y_train, eval_set=[(x_train, y_train), (x_validate, y_validate)], xgb_model=xg_clf.get_booster(), early_stopping_rounds=10)
 
 #%%
-xg_clf.save_model(f"Model/signal_td_reconstruction_balanced_oversampling_treedepth_{max_depth}_eta_0.1_state_6.model")
+# xg_clf.save_model(f"Model/signal_td_reconstruction_balanced_oversampling_treedepth_{max_depth}_eta_0.1_state_6.model")
 
 # bst = xgb.XGBClassifier()
 # bst.load_model("Model/signal_td_balanced_oversampling_treedepth_12_eta_0.1_state_6.model")
@@ -137,7 +137,7 @@ disp_train = ConfusionMatrixDisplay.from_estimator(
         normalize="true",
     )
 plt.title(f"Training dataset")
-plt.savefig(f"Output/confusion_training_XGB_filter_signal_td_reconstruction_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+# plt.savefig(f"Output/confusion_training_XGB_filter_signal_td_reconstruction_depth_{max_depth}_equal_oversampling.png", dpi=1000)
 plt.show()
 
 disp_validate = ConfusionMatrixDisplay.from_estimator(
@@ -149,7 +149,7 @@ disp_validate = ConfusionMatrixDisplay.from_estimator(
         normalize="true",
     )
 plt.title(f"Validation dataset")
-plt.savefig(f"Output/confusion_validation_XGB_filter_signal_td_reconstruction_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+# plt.savefig(f"Output/confusion_validation_XGB_filter_signal_td_reconstruction_depth_{max_depth}_equal_oversampling.png", dpi=1000)
 plt.show()
 
 #%%
@@ -203,32 +203,33 @@ plt.ylabel("Number of candidates")
 plt.legend()
 # plt.title(f"signal.pkl + td, Oversampling Background, B0_P, Max Depth = {max_depth}")
 plt.title(r"$B_0$ mass distribution")
-plt.savefig(f"Output/B0mm_XGB_filter_signal_td_reconstruction_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+# plt.savefig(f"Output/B0mm_XGB_filter_signal_td_reconstruction_depth_{max_depth}_equal_oversampling.png", dpi=1000)
 plt.show()
 #%%
-plt.hist(df_test["B0_MM"], bins=60, label="Manual cuts only", density=True, color=colors[0])
-plt.hist(df_signal["B0_MM"], bins=60, label="Signal Monte Carlo", density=True, alpha=0.5, color=colors[2])
+plt.hist(df_test["B0_MM"], bins=60, label="Manual cuts only", density=True, alpha=1, color=colors[0])
 plt.hist(df_clf_filtered["B0_MM"], bins=60, label="XGBoost Classifier", density=True, alpha=0.5, color=colors[1])
+# plt.hist(df_test["B0_MM"], bins=60, histtype="step", label="Manual cuts only", density=True, color=colors[0])
+plt.hist(df_signal["B0_MM"], bins=60, histtype="step", linewidth=1, label="Signal Monte Carlo", density=True, color=colors[2])
 plt.xlabel(r"$B_0$ mass / MeV")
 plt.ylabel("Probability density")
 plt.legend()
 # plt.title(f"signal.pkl + td, Oversampling Background, B0_P, Max Depth = {max_depth}")
 plt.title(r"Normalised $B_0$ mass distribution")
-plt.savefig(f"Output/B0mm_normalised_XGB_filter_signal_td_reconstruction_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+# plt.savefig(f"Output/B0mm_normalised_XGB_filter_signal_td_reconstruction_depth_{max_depth}_equal_oversampling_v4.png", dpi=1000)
 plt.show()
 #%%
 plt.title(f"signal.pkl + td, Oversampling Background, B0_P, Max Depth = {max_depth}")
 plt.hist(df_clf_filtered["costhetal"], bins=50)
 plt.xlabel(r"$cos(\theta_l)$")
 plt.ylabel("Number of Candidates")
-plt.savefig(f"Output/costhetal_XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+# plt.savefig(f"Output/costhetal_XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.png", dpi=1000)
 plt.show()
 #%%
 plt.title(f"signal.pkl + td, Oversampling Background, B0_P, Max Depth = {max_depth}")
 plt.hist(df_clf_filtered["costhetak"], bins=50)
 plt.xlabel(r"$cos(\theta_k)$")
 plt.ylabel("Number of Candidates")
-plt.savefig(f"Output/costhetak_XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+# plt.savefig(f"Output/costhetak_XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.png", dpi=1000)
 plt.show()
 #%%
 training_loss = xg_clf.evals_result()["validation_0"]["logloss"]
@@ -288,7 +289,7 @@ for i, ax in enumerate(axs.flat):
 
     #ax.set_ylim(0, 150)
 
-plt.savefig(f"Output/B0mm_q2bins_XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.png", dpi=1000)
+# plt.savefig(f"Output/B0mm_q2bins_XGB_filter_signal_td_noq2_depth_{max_depth}_equal_oversampling.png", dpi=1000)
 plt.show()
 #%%
 # fit_params = {
