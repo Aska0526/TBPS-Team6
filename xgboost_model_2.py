@@ -120,8 +120,9 @@ xg_clf.fit(x_train, y_train, eval_set=[(x_train, y_train), (x_validate, y_valida
 #%%
 # xg_clf.save_model(f"Model/signal_td_reconstruction_balanced_oversampling_treedepth_{max_depth}_eta_0.1_state_6.model")
 
-# bst = xgb.XGBClassifier()
-# bst.load_model("Model/signal_td_balanced_oversampling_treedepth_12_eta_0.1_state_6.model")
+bst = xgb.XGBClassifier()
+bst.load_model("Model/signal_td_reconstruction_balanced_oversampling_treedepth_12_eta_0.1_state_6.model")
+xg_clf=bst
 #%%
 
 #%%
